@@ -1,0 +1,203 @@
+.agregarEmpleadoContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #e5e5e5;
+  font-family: 'Times New Roman';
+  width: 0vw;
+  box-sizing: border-box;
+}
+
+.agregarEmpleadoMainContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0px;
+  position: absolute;
+  top: 15%;
+  width: 80%;
+  text-align: center;
+  margin-left: 0px;
+  font-family: 'Times New Roman';
+}
+
+.agregarEmpleadoTitle {
+  font-size: 30px;
+  font-weight: bold;
+  margin-top: 25px;
+}
+
+.agregarEmpleadoFormContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1200px;
+  gap: 20px;
+}
+
+.agregarEmpleadoFormRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.agregarEmpleadoFormActions {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 20px;
+}
+
+.agregarEmpleadoInput {
+  padding: 10px;
+  border: 1px solid #a12d2f;
+  border-radius: 5px;
+  width: 100%;
+  margin-right: 20px;
+}
+
+.agregarEmpleadoInput2 {
+  width: 250px;
+  padding: 10px;
+  border: 1px solid #a12d2f;
+  border-radius: 5px;
+}
+
+.agregarEmpleadoSelect {
+  padding: 10px;
+  border: 1px solid #a12d2f;
+  border-radius: 5px;
+  width: 100%;
+}
+
+.agregarEmpleadoBackButtonAction,
+.agregarEmpleadoAddButton {
+  padding: 10px 20px;
+  background-color: gray;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 0 10px;
+}
+
+.agregarEmpleadoHomeButton {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background-color: #333;
+  color: white;
+  font-size: 24px;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+}
+
+.agregarEmpleadoHomeButton:hover {
+  background-color: #555;
+}
+
+.spinnerContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 50vh; /* Altura suficiente para centrar */
+}
+
+/* Estilos para las tablas */
+.empleadoTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 16px;
+  text-align: left;
+  background-color: #f9f9f9;
+}
+
+.empleadoTable th,
+.empleadoTable td {
+  border: 1px solid #a12d2f;
+  padding: 12px;
+}
+
+.empleadoTable th {
+  background-color: #a12d2f;
+  color: white;
+  font-weight: bold;
+  text-align: center;
+}
+
+.empleadoTable td {
+  text-align: center;
+}
+
+.empleadoTable tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.empleadoTable tr:hover {
+  background-color: #e0e0e0;
+}
+
+/* Botones dentro de las tablas */
+.empleadoButtonGroup {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.empleadoActionButton {
+  padding: 5px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 35px;
+  height: 35px;
+}
+
+.empleadoEditButton {
+  background-color: #28a745;
+  color: white;
+}
+
+.empleadoDeleteButton {
+  background-color: #dc3545;
+  color: white;
+}
+
+.empleadoEditButton:hover {
+  background-color: #218838;
+}
+
+.empleadoDeleteButton:hover {
+  background-color: #c82333;
+}
+
+.material-icons {
+  font-size: 20px;
+  vertical-align: middle;
+}
+
+/* Animación fadeIn */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fadeIn {
+  animation: fadeIn 0.5s ease-in; /* Se agrega la animación */
+}
+
+/* Mantén el resto de los estilos que ya tenías */
+

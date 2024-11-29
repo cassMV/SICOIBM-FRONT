@@ -1,0 +1,276 @@
+.agregarAreaContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #e5e5e5;
+  font-family: 'Times New Roman';
+  width: 0vw;
+  box-sizing: border-box;
+}
+
+.agregarAreaHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #a12d2f;
+  padding: 10px 20px;
+}
+
+.agregarAreaLogo {
+  height: 80px;
+  width: 400px;
+  border-radius: 5px;
+}
+
+.agregarAreaUserIcon img {
+  height: 70px;
+  border-radius: 50%;
+}
+
+.agregarAreaMenuLateral {
+  display: flex;
+  flex-direction: column;
+  background-color: #a12d2f;
+  padding: 10px;
+  width: 200px;
+}
+
+.agregarAreaMenuTitle {
+  text-align: center;
+  margin: 0;
+  padding: 7px 50px;
+  font-size: 20px;
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.agregarAreaBackButton {
+  background-color: #a12d2f;
+  color: white;
+  font-size: 20px;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  margin-bottom: 0px;
+}
+
+.agregarAreaMenuList {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.agregarAreaMenuList li {
+  font-size: 18px;
+  color: #ffffff;
+  padding: 9.3px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.3s ease, color 0.3s ease;
+  background-color: #a12d2f;
+  border: 1px solid #000000;
+  border-radius: 2px;
+  text-align: center;
+}
+
+.agregarAreaMenuList li:hover {
+  transform: scale(1.05);
+  background-color: #e5e5e5;
+  color: #4a4a4a;
+  border-color: #4a4a4a;
+}
+
+.agregarAreaActive {
+  background-color: #ffffff;
+  color: #644141;
+  font-weight: bold;
+}
+
+.agregarAreaMainContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0px;
+  position: absolute;
+  top: 15%;
+  width: 80%;
+  text-align: center;
+  margin-left: 0px;
+  font-family: 'Times New Roman';
+}
+
+.agregarAreaTitle {
+  font-size: 30px;
+  font-weight: bold;
+  margin-top: 25px;
+}
+
+.agregarAreaFormContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1200px;
+  gap: 20px;
+}
+
+.agregarAreaFormRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.agregarAreaInput {
+  padding: 10px;
+  border: 1px solid #a12d2f;
+  border-radius: 5px;
+  width: 100%;
+  margin-right: 20px;
+}
+
+.agregarAreaInput2 {
+  width: 250px; /* Ancho fijo */
+  padding: 10px;
+  border: 1px solid #a12d2f;
+  border-radius: 5px;
+}
+
+.agregarAreaFormActions {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 20px
+}
+
+.agregarAreaBackButtonAction,
+.agregarAreaAddButton {
+  padding: 10px 20px;
+  background-color: gray;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 0 10px;
+}
+
+.agregarAreaHomeButton {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background-color: #333;
+  color: white;
+  font-size: 24px;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+}
+
+
+.tableTitle {
+  margin-top: 20px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  text-align: left;
+}
+
+.areaTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 16px;
+  text-align: left;
+  background-color: #f9f9f9;
+}
+
+.areaTable th,
+.areaTable td {
+  border: 1px solid #a12d2f;
+  padding: 12px;
+}
+
+.areaTable th {
+  background-color: #a12d2f;
+  color: white;
+  font-weight: bold;
+  text-align: center;
+}
+
+.areaTable td {
+  text-align: center;
+}
+
+.areaTable tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.actionButton {
+  padding: 5px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 35px;
+  height: 35px;
+}
+
+.editButton {
+  background-color: #28a745;
+  color: white;
+}
+
+.deleteButton {
+  background-color: #dc3545;
+  color: white;
+}
+
+.editButton:hover {
+  background-color: #218838;
+}
+
+.deleteButton:hover {
+  background-color: #c82333;
+}
+
+.material-icons {
+  font-size: 20px;
+  vertical-align: middle;
+}
+
+.agregarAreaMainContent {
+  padding: 20px;
+}
+
+.areaTable tr:hover {
+  background-color: #e0e0e0;
+}
+.spinnerContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Hace que el spinner esté centrado en la pantalla */
+}
+
+.agregarAreaMainContent {
+  animation: fadeIn 0.5s ease-in; /* Añade una animación de entrada */
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+

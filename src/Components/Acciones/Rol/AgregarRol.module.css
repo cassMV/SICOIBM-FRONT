@@ -1,0 +1,197 @@
+.agregarRolContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #e5e5e5;
+  font-family: 'Times New Roman';
+  width: 0vw;
+  box-sizing: border-box;
+}
+
+.agregarRolMainContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0px;
+  position: absolute;
+  top: 15%;
+  width: 80%;
+  text-align: center;
+  margin-left: 0px;
+  font-family: 'Times New Roman';
+}
+
+.agregarRolTitle {
+  font-size: 30px;
+  font-weight: bold;
+  margin-top: 25px;
+}
+
+.agregarRolFormContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1200px;
+  gap: 20px;
+}
+
+.agregarRolFormRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.agregarRolInput {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #a12d2f;
+  border-radius: 5px;
+  margin-right: 20px;
+}
+
+.agregarRolInput2 {
+  width: 250px;
+  padding: 10px;
+  border: 1px solid #a12d2f;
+  border-radius: 5px;
+  margin-right: 20px;
+}
+
+.agregarRolFormActions {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 20px;
+}
+
+.agregarRolBackButtonAction,
+.agregarRolAddButton {
+  padding: 10px 20px;
+  background-color: gray;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 0 10px;
+}
+
+.agregarRolHomeButton {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background-color: #333;
+  color: white;
+  font-size: 24px;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+}
+
+.agregarRolHomeButton:hover {
+  background-color: #555;
+}
+
+/* Animación fadeIn */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fadeIn {
+  animation: fadeIn 0.5s ease-in; /* Animación de entrada */
+}
+
+/* Título de la tabla */
+.tableTitle {
+  margin-top: 20px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  text-align: left;
+}
+
+/* Tabla */
+.rolTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 16px;
+  text-align: left;
+  background-color: #f9f9f9;
+}
+
+.rolTable th,
+.rolTable td {
+  border: 1px solid #a12d2f;
+  padding: 12px;
+}
+
+.rolTable th {
+  background-color: #a12d2f;
+  color: white;
+  font-weight: bold;
+  text-align: center;
+}
+
+.rolTable td {
+  text-align: center;
+}
+
+.rolTable tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.rolTable tr:hover {
+  background-color: #e0e0e0;
+}
+
+/* Botones de acciones */
+.buttonGroup {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.actionButton {
+  padding: 5px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 35px;
+  height: 35px;
+}
+
+.editButton {
+  background-color: #28a745;
+  color: white;
+}
+
+.deleteButton {
+  background-color: #dc3545;
+  color: white;
+}
+
+.editButton:hover {
+  background-color: #218838;
+}
+
+.deleteButton:hover {
+  background-color: #c82333;
+}
+
+/* Iconos dentro de los botones */
+.material-icons {
+  font-size: 20px;
+  vertical-align: middle;
+}

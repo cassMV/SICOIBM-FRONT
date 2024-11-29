@@ -1,0 +1,140 @@
+.agregarBienContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #e5e5e5;
+  font-family: 'Times New Roman';
+  width: 0vw;
+  box-sizing: border-box;
+}
+
+.agregarBienMainContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0px;
+  position: absolute;
+  top: 15%;
+  width: 80%;
+  text-align: center;
+  margin-left: 0px;
+  font-family: 'Times New Roman';
+}
+
+.agregarBienTitle {
+  font-size: 30px;
+  font-weight: bold;
+  margin-top: 25px;
+}
+
+.agregarBienSearchContainer {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.agregarBienSearchInput {
+  padding: 10px;
+  border: 1px solid #a12d2f;
+  border-radius: 5px;
+  margin-right: 10px;
+  width: 300px;
+}
+
+.agregarBienSearchButton {
+  padding: 10px;
+  background-color: #a12d2f;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.agregarBienSearchButton:hover {
+  background-color: #4a4a4a;
+}
+
+.agregarBienTableContainer {
+  width: 90%;
+  margin-top: 40px;
+}
+
+.agregarBienTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+}
+
+.agregarBienTable th,
+.agregarBienTable td {
+  border: 1px solid #a12d2f;
+  padding: 10px;
+}
+
+.agregarBienEditButton {
+  background-color: #5cb85c;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+.agregarBienDeleteButton {
+  background-color: #d61a1d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+.agregarBienEditButton:hover,
+.agregarBienDeleteButton:hover {
+  opacity: 0.8;
+}
+
+.agregarBienFormActions {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 20px;
+}
+
+.agregarBienBackButtonAction {
+  padding: 10px 20px;
+  background-color: gray;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-right: 10px;
+}
+
+.agregarBienNextButton {
+  padding: 10px 20px;
+  background-color: gray;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.agregarBienHomeButton {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background-color: #333;
+  color: white;
+  font-size: 24px;
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+}
+
+.agregarBienHomeButton:hover {
+  background-color: #555;
+}

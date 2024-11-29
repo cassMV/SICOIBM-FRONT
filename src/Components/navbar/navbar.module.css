@@ -1,0 +1,29 @@
+/* Encabezado con logo e icono de usuario */
+.header {
+    position: fixed; /* Fija el encabezado en la parte superior */
+    top: 0; /* Alinea el encabezado con la parte superior de la pantalla */
+    left: 0; /* Alinea el encabezado con el borde izquierdo */
+    width: 100%; /* Asegura que ocupe el 100% del ancho de la pantalla */
+    height: 100px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #a12d2f;
+    padding: 10px 20px;
+    box-sizing: border-box; /* Incluye padding en el ancho y alto */
+    z-index: 1000; /* Coloca el encabezado encima de otros elementos */
+  }
+  
+  /* Logo */
+  .logo {
+    height: 80px;
+    width: 400px;
+    border-radius: 5px;
+  }
+  
+  /* Icono de usuario */
+  .user-icon img {
+    height: 70px;
+    border-radius: 50%; /* Hace que el icono sea circular */
+  }
+  
