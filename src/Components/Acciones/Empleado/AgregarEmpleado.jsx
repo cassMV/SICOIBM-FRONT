@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { TailSpin } from 'react-loader-spinner'; // Spinner para animación de carga
+import Swal from 'sweetalert2'; // SweetAlert para notificaciones
 import styles from './AgregarEmpleado.module.css';
 
 const AgregarEmpleado = () => {
@@ -9,11 +10,21 @@ const AgregarEmpleado = () => {
   const [empleados, setEmpleados] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Estado para los valores del formulario
+  const [formData, setFormData] = useState({
+    nombre_empleado: '',
+    correo_electronico: '',
+    rfc: '',
+    numero_contacto: '',
+    status_empleado: '',
+    id_area: '',
+  });
+
   // Obtener empleados desde la API
   useEffect(() => {
     const fetchEmpleados = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/empleado/get-empleados`);
+        const response = await axios.get("http://localhost:3100/api/empleado/get-empleados");
         if (response.data.success) {
           setEmpleados(response.data.data);
         } else {
@@ -25,18 +36,48 @@ const AgregarEmpleado = () => {
         setIsLoading(false); // Termina la carga
       }
     };
-
     fetchEmpleados();
   }, []);
 
-  const handleEdit = (id) => {
-    console.log(`Editar empleado con ID: ${id}`);
-    // Lógica para editar empleado
+  // Manejo de cambios en los inputs
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
 
-  const handleDelete = (id) => {
-    console.log(`Eliminar empleado con ID: ${id}`);
-    // Lógica para eliminar empleado
+  // Función para manejar el envío del formulario
+  const handleAddEmpleado = async () => {
+    try {
+      const response = await axios.post('http://localhost:3100/api/empleado/create-empleado', formData);
+      if (response.data.success) {
+        Swal.fire({
+          icon: 'success',
+          title: '¡Empleado agregado!',
+          text: 'El empleado se ha agregado exitosamente.',
+        });
+        setEmpleados([...empleados, response.data.data]); // Actualiza la lista de empleados
+        setFormData({
+          nombre_empleado: '',
+          correo_electronico: '',
+          rfc: '',
+          numero_contacto: '',
+          status_empleado: 'Activo',
+          id_area: '',
+        }); // Limpia el formulario
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudo agregar el empleado.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: 'Ocurrió un error al intentar agregar el empleado.',
+      });
+    }
   };
 
   return (
@@ -46,58 +87,73 @@ const AgregarEmpleado = () => {
 
         {/* Formulario de agregar empleado */}
         <div className={styles.agregarEmpleadoFormContainer}>
-          <input
-            type="text"
-            placeholder="Empleado (ID)"
-            className={styles.agregarEmpleadoInput2}
-          />
           <div className={styles.agregarEmpleadoFormRow}>
             <input
               type="text"
+              name="nombre_empleado"
               placeholder="Nombre del empleado"
               className={styles.agregarEmpleadoInput}
+              value={formData.nombre_empleado}
+              onChange={handleInputChange}
             />
             <input
               type="text"
+              name="correo_electronico"
               placeholder="Correo electrónico"
               className={styles.agregarEmpleadoInput}
+              value={formData.correo_electronico}
+              onChange={handleInputChange}
             />
             <input
               type="text"
+              name="rfc"
               placeholder="RFC"
               className={styles.agregarEmpleadoInput}
+              value={formData.rfc}
+              onChange={handleInputChange}
             />
           </div>
           <div className={styles.agregarEmpleadoFormRow}>
             <input
               type="text"
-              placeholder="Número de empleado"
-              className={styles.agregarEmpleadoInput}
-            />
-            <input
-              type="text"
+              name="numero_contacto"
               placeholder="Número de contacto"
               className={styles.agregarEmpleadoInput}
+              value={formData.numero_contacto}
+              onChange={handleInputChange}
             />
-            <select className={styles.agregarEmpleadoSelect}>
-              <option>Activo</option>
-              <option>Inactivo</option>
+            <select
+              name="status_empleado"
+              className={styles.agregarEmpleadoSelect}
+              value={formData.status_empleado}
+              onChange={handleInputChange}
+            >
+              <option value="Activo">Activo</option>
+              <option value="Inactivo">Inactivo</option>
             </select>
             <input
               type="text"
+              name="id_area"
               placeholder="Área (ID)"
               className={styles.agregarEmpleadoInput}
+              value={formData.id_area}
+              onChange={handleInputChange}
             />
           </div>
         </div>
         <div className={styles.agregarEmpleadoFormActions}>
           <button
             className={styles.agregarEmpleadoBackButtonAction}
-            onClick={() => navigate(-1)} // Navega hacia atrás
+            onClick={() => navigate(-1)}
           >
             Atrás
           </button>
-          <button className={styles.agregarEmpleadoAddButton}>Agregar</button>
+          <button
+            className={styles.agregarEmpleadoAddButton}
+            onClick={handleAddEmpleado}
+          >
+            Agregar
+          </button>
         </div>
 
         {/* Spinner o tabla de empleados */}
@@ -107,7 +163,6 @@ const AgregarEmpleado = () => {
           </div>
         ) : (
           <>
-            {/* Tabla de empleados */}
             <h3 className={styles.tableTitle}>Lista de Empleados</h3>
             <table className={`${styles.empleadoTable} ${styles.fadeIn}`}>
               <thead>
@@ -119,7 +174,6 @@ const AgregarEmpleado = () => {
                   <th>Contacto</th>
                   <th>Status</th>
                   <th>Área</th>
-                  <th>Opciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -131,23 +185,7 @@ const AgregarEmpleado = () => {
                     <td>{empleado.rfc}</td>
                     <td>{empleado.numero_contacto}</td>
                     <td>{empleado.status_empleado}</td>
-                    <td>{empleado.Area || 'Sin área asignada'}</td>
-                    <td>
-                      <div className={styles.empleadoButtonGroup}>
-                        <button
-                          className={`${styles.empleadoActionButton} ${styles.empleadoEditButton}`}
-                          onClick={() => handleEdit(empleado.id_empleado)}
-                        >
-                          <span className="material-icons">edit</span>
-                        </button>
-                        <button
-                          className={`${styles.empleadoActionButton} ${styles.empleadoDeleteButton}`}
-                          onClick={() => handleDelete(empleado.id_empleado)}
-                        >
-                          <span className="material-icons">delete</span>
-                        </button>
-                      </div>
-                    </td>
+                    <td>{empleado.id_area}</td>
                   </tr>
                 ))}
               </tbody>
@@ -167,3 +205,4 @@ const AgregarEmpleado = () => {
 };
 
 export default AgregarEmpleado;
+
