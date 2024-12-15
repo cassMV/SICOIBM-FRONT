@@ -9,11 +9,7 @@ function AgregarBien() {
       <main className={styles.agregarBienMainContent}>
         <h2 className={styles.agregarBienTitle}>Agregar Bien</h2>
         <div className={styles.agregarBienSearchContainer}>
-          <input
-            type="text"
-            placeholder="Producto (ID)"
-            className={styles.agregarBienSearchInput}
-          />
+          <input type="text" placeholder="Producto (ID)" className={styles.agregarBienSearchInput}/>
           <button className={styles.agregarBienSearchButton}>🔍</button>
         </div>
         <div className={styles.agregarBienTableContainer}>

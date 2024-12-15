@@ -13,9 +13,7 @@ const AgregarProducto = () => {
   useEffect(() => {
     const fetchProductos = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:3100/api/producto/get-productos"
-        );
+        const response = await axios.get("http://localhost:3100/api/producto/get-productos");
         if (response.data.success) {
           setProductos(response.data.data);
         } else {
@@ -106,7 +104,7 @@ const AgregarProducto = () => {
                     <td>{producto.modelo}</td>
                     <td>{producto.ruta_imagen}</td>
                     <td>{producto.caracteristicas}</td>
-                    <td>{producto.Marca || "Sin marca asignada"}</td>
+                    <td>{producto.id_marca}</td>
                     <td>
                       <div className={styles.buttonGroup}>
                         <button

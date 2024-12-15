@@ -8,14 +8,6 @@
   box-sizing: border-box;
 }
 
-.agregarAreaHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background-color: #a12d2f;
-  padding: 10px 20px;
-}
-
 .agregarAreaLogo {
   height: 80px;
   width: 400px;
@@ -25,14 +17,6 @@
 .agregarAreaUserIcon img {
   height: 70px;
   border-radius: 50%;
-}
-
-.agregarAreaMenuLateral {
-  display: flex;
-  flex-direction: column;
-  background-color: #a12d2f;
-  padding: 10px;
-  width: 200px;
 }
 
 .agregarAreaMenuTitle {
@@ -116,22 +100,23 @@
 .agregarAreaFormRow {
   display: flex;
   justify-content: space-between;
-  gap: 20px;
+  gap: 10px;
 }
 
 .agregarAreaInput {
+  flex: 1;
   padding: 10px;
   border: 1px solid #a12d2f;
   border-radius: 5px;
-  width: 100%;
   margin-right: 20px;
 }
 
 .agregarAreaInput2 {
-  width: 250px; /* Ancho fijo */
+  width: 250px;
   padding: 10px;
   border: 1px solid #a12d2f;
   border-radius: 5px;
+  margin-right: 20px;
 }
 
 .agregarAreaFormActions {
@@ -247,9 +232,6 @@
   vertical-align: middle;
 }
 
-.agregarAreaMainContent {
-  padding: 20px;
-}
 
 .areaTable tr:hover {
   background-color: #e0e0e0;
