@@ -141,12 +141,7 @@ const AgregarArea = () => {
           </>
         )}
       </main>
-      <button
-        className={styles.agregarAreaHomeButton}
-        onClick={() => navigate('/menu')}
-      >
-        🏠
-      </button>
+      <button className={styles.agregarAreaHomeButton} onClick={() => navigate('/')}>🏠</button>
     </div>
   );
 };

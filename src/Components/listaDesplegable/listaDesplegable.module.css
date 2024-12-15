@@ -1,11 +1,16 @@
 .ListaMenuLateral {
-    margin-top: 100px; /* Ajusta el margen para separarlo del navbar */
-    width: 230px;
-    background-color: #a12d2f; /* Fondo rojo oscuro */
-    padding: 20px;
-    border-right: 1px solid #ddd; /* Separador */
-    display: flex;
-    flex-direction: column; /* Alinea los elementos en columna */
+  position: fixed; /* Fija el menú en su lugar */
+  top: 100px; /* Alinea al borde superior */
+  left: 0; /* Alinea al borde izquierdo */
+  height: 100vh; /* Ocupa todo el alto de la ventana */
+  width: 240px; /* Ancho del menú */
+  background-color: #a12d2f; /* Fondo rojo oscuro */
+  padding: 20px;
+  border-right: 1px solid #ddd; /* Separador */
+  display: flex;
+  flex-direction: column; /* Alinea los elementos en columna */
+  box-sizing: border-box; /* Incluye padding en el ancho/alto total */
+  z-index: 1000; /* Asegura que esté sobre otros elementos */
   }
   
   /* Título de la lista */
@@ -38,7 +43,7 @@
   .ListaMenuList li {
     font-size: 18px;
     color: #ffffff; /* Texto blanco */
-    padding: 5px;
+    padding: 6px;
     cursor: pointer;
     transition: transform 0.2s ease, background-color 0.3s ease, color 0.3s ease; /* Animación suave */
     background-color: #a12d2f; /* Fondo rojo oscuro */

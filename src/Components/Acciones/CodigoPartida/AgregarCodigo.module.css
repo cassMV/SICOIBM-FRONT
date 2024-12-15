@@ -6,6 +6,7 @@
   font-family: 'Times New Roman';
   width: 0vw;
   box-sizing: border-box;
+  margin-left: 240px;
 }
 
 .agregarCodigoMainContent {
@@ -77,17 +78,18 @@
 }
 
 .agregarCodigoHomeButton {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  background-color: #333;
-  color: white;
-  font-size: 24px;
-  border: none;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  cursor: pointer;
+  position: fixed; /* Fija el botón a la ventana del navegador */
+  bottom: 20px; /* Alinea a 20px desde la parte inferior */
+  right: 20px; /* Alinea a 20px desde la parte derecha */
+  background-color: #333; /* Fondo gris oscuro */
+  color: white; /* Texto blanco */
+  font-size: 24px; /* Tamaño del texto */
+  border: none; /* Sin borde */
+  border-radius: 50%; /* Botón circular */
+  width: 50px; /* Ancho del botón */
+  height: 50px; /* Alto del botón */
+  cursor: pointer; /* Cambia el cursor a puntero al pasar el mouse */
+  z-index: 1000; /* Asegura que esté por encima de otros elementos */
 }
 
 .agregarCodigoHomeButton:hover {

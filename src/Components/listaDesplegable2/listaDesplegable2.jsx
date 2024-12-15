@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import styles from "./listaDesplegable2.module.css";
 
@@ -11,8 +11,8 @@ const listaDesplegable2 = () => {
       ];
 
     return (
-        <div>
-            <button className={styles.Lista2BackButton} onClick={() => navigate("/menu")}>←</button>
+        <div className={styles.Lista2MenuLateral}>
+            <button className={styles.Lista2BackButton} onClick={() => navigate("/")}>←</button>
             <ul className={styles.Lista2MenuList}>
             <h2 className={styles.Lista2MenuTitle}>Agregar</h2>
             {items.map((item, index) => (
