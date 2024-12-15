@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { TailSpin } from 'react-loader-spinner'; // Spinner para animación de carga
-import Swal from 'sweetalert2'; // SweetAlert para notificaciones
-import styles from './AgregarEmpleado.module.css';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { TailSpin } from "react-loader-spinner"; // Spinner para animación de carga
+import Swal from "sweetalert2"; // SweetAlert para notificaciones
+import styles from "./AgregarEmpleado.module.css";
 
 const AgregarEmpleado = () => {
   const navigate = useNavigate();
@@ -12,26 +12,28 @@ const AgregarEmpleado = () => {
 
   // Estado para los valores del formulario
   const [formData, setFormData] = useState({
-    nombre_empleado: '',
-    correo_electronico: '',
-    rfc: '',
-    numero_contacto: '',
-    status_empleado: '',
-    id_area: '',
+    nombre_empleado: "",
+    correo_electronico: "",
+    rfc: "",
+    numero_contacto: "",
+    status_empleado: "",
+    id_area: 0,
   });
 
   // Obtener empleados desde la API
   useEffect(() => {
     const fetchEmpleados = async () => {
       try {
-        const response = await axios.get("http://localhost:3100/api/empleado/get-empleados");
+        const response = await axios.get(
+          "http://localhost:3100/api/empleado/get-empleados"
+        );
         if (response.data.success) {
           setEmpleados(response.data.data);
         } else {
-          console.error('Error:', response.data.message);
+          console.error("Error:", response.data.message);
         }
       } catch (error) {
-        console.error('Error al obtener los empleados:', error);
+        console.error("Error al obtener los empleados:", error);
       } finally {
         setIsLoading(false); // Termina la carga
       }
@@ -42,40 +44,46 @@ const AgregarEmpleado = () => {
   // Manejo de cambios en los inputs
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData({
+      ...formData,
+      [name]: name === "id_area" ? Number(value) : value, // Convierte a número si es 'id_area'
+    });
   };
 
   // Función para manejar el envío del formulario
   const handleAddEmpleado = async () => {
     try {
-      const response = await axios.post('http://localhost:3100/api/empleado/create-empleado', formData);
+      const response = await axios.post(
+        "http://localhost:3100/api/empleado/create-empleado",
+        formData
+      );
       if (response.data.success) {
         Swal.fire({
-          icon: 'success',
-          title: '¡Empleado agregado!',
-          text: 'El empleado se ha agregado exitosamente.',
+          icon: "success",
+          title: "¡Empleado agregado!",
+          text: "El empleado se ha agregado exitosamente.",
         });
         setEmpleados([...empleados, response.data.data]); // Actualiza la lista de empleados
         setFormData({
-          nombre_empleado: '',
-          correo_electronico: '',
-          rfc: '',
-          numero_contacto: '',
-          status_empleado: 'Activo',
-          id_area: '',
+          nombre_empleado: "",
+          correo_electronico: "",
+          rfc: "",
+          numero_contacto: "",
+          status_empleado: "",
+          id_area: "",
         }); // Limpia el formulario
       } else {
         Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: response.data.message || 'No se pudo agregar el empleado.',
+          icon: "error",
+          title: "Error",
+          text: response.data.message || "No se pudo agregar el empleado.",
         });
       }
     } catch (error) {
       Swal.fire({
-        icon: 'error',
-        title: 'Error en el servidor',
-        text: 'Ocurrió un error al intentar agregar el empleado.',
+        icon: "error",
+        title: "Error en el servidor",
+        text: error,
       });
     }
   };
@@ -122,17 +130,17 @@ const AgregarEmpleado = () => {
               value={formData.numero_contacto}
               onChange={handleInputChange}
             />
-            <select
-              name="status_empleado"
-              className={styles.agregarEmpleadoSelect}
-              value={formData.status_empleado}
-              onChange={handleInputChange}
-            >
-              <option value="Activo">Activo</option>
-              <option value="Inactivo">Inactivo</option>
-            </select>
             <input
               type="text"
+              name="status_empleado"
+              placeholder="Número status"
+              className={styles.agregarEmpleadoInput}
+              value={formData.status_empleado}
+              onChange={handleInputChange}
+            />
+
+            <input
+              type="number"
               name="id_area"
               placeholder="Área (ID)"
               className={styles.agregarEmpleadoInput}
@@ -196,7 +204,7 @@ const AgregarEmpleado = () => {
 
       <button
         className={styles.agregarEmpleadoHomeButton}
-        onClick={() => navigate('/menu')}
+        onClick={() => navigate("/menu")}
       >
         🏠
       </button>
@@ -205,4 +213,3 @@ const AgregarEmpleado = () => {
 };
 
 export default AgregarEmpleado;
-
