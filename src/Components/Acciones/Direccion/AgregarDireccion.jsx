@@ -1,33 +1,78 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { TailSpin } from 'react-loader-spinner';
 import axios from 'axios';
-import { TailSpin } from 'react-loader-spinner'; // Spinner para animación de carga
-import styles from './AgregarDireccion.module.css';
+import Swal from 'sweetalert2'; // Importar SweetAlert
+import styles from './AgregarDireccion.module.css'; // Asegúrate de crear o modificar un archivo CSS para este componente
 
 const AgregarDireccion = () => {
   const navigate = useNavigate();
   const [direcciones, setDirecciones] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [nombreDireccion, setNombreDireccion] = useState('');
 
-  // Obtener direcciones desde la API
+  // Petición a la API para obtener las direcciones
   useEffect(() => {
     const fetchDirecciones = async () => {
       try {
-        const response = await axios.get('http://localhost:3100/api/direccion/get-direcciones');
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/direccion/get-direcciones`);
         if (response.data.success) {
           setDirecciones(response.data.data);
         } else {
-          console.error('Error:', response.data.message);
+          console.error(response.data.message);
         }
       } catch (error) {
         console.error('Error al obtener las direcciones:', error);
       } finally {
-        setIsLoading(false); // Termina la carga
+        setIsLoading(false);
       }
     };
-
     fetchDirecciones();
   }, []);
+
+  // Función para manejar el envío del formulario
+  const handleAddDireccion = async () => {
+    if (!nombreDireccion.trim()) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campos incompletos',
+        text: 'Por favor, ingrese un nombre para la dirección.',
+      });
+      return;
+    }
+
+    try {
+      const response = await axios.post('http://localhost:3100/api/direccion/create-direccion', {
+        nombre_direccion: nombreDireccion,
+      });
+
+      if (response.data.success) {
+        Swal.fire({
+          icon: 'success',
+          title: '¡Dirección agregada!',
+          text: 'La dirección se ha agregado exitosamente.',
+          timer: 2000,
+          showConfirmButton: false,
+        });
+
+        // Actualiza la lista de direcciones con la nueva dirección
+        setDirecciones([...direcciones, response.data.data]);
+        setNombreDireccion(''); // Limpia el campo del formulario
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudo agregar la dirección.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: 'Ocurrió un error al intentar agregar la dirección. Por favor, intente nuevamente.',
+      });
+    }
+  };
 
   return (
     <div className={styles.agregarDireccionContainer}>
@@ -37,22 +82,22 @@ const AgregarDireccion = () => {
           <div className={styles.agregarDireccionFormRow}>
             <input
               type="text"
-              placeholder="Dirección (ID)"
-              className={styles.agregarDireccionInput2}
-            />
-            <input
-              type="text"
-              placeholder="Nombre de la dirección"
+              placeholder="Nombre de la Dirección"
               className={styles.agregarDireccionInput}
+              value={nombreDireccion}
+              onChange={(e) => setNombreDireccion(e.target.value)}
             />
           </div>
         </div>
         <div className={styles.agregarDireccionFormActions}>
-          <button className={styles.agregarDireccionBackButtonAction}>Atrás</button>
-          <button className={styles.agregarDireccionAddButton}>Agregar</button>
+          <button className={styles.agregarDireccionBackButtonAction} onClick={() => navigate('/menu')}>
+            Atrás
+          </button>
+          <button className={styles.agregarDireccionAddButton} onClick={handleAddDireccion}>
+            Agregar
+          </button>
         </div>
 
-        {/* Spinner o tabla de direcciones */}
         {isLoading ? (
           <div className={styles.spinnerContainer}>
             <TailSpin height="80" width="80" color="red" ariaLabel="loading" />
@@ -65,7 +110,7 @@ const AgregarDireccion = () => {
                 <tr>
                   <th>ID</th>
                   <th>Nombre</th>
-                  <th>Opciones</th> {/* Columna para botones */}
+                  <th>Opciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -96,12 +141,7 @@ const AgregarDireccion = () => {
           </>
         )}
       </main>
-      <button
-        className={styles.agregarDireccionHomeButton}
-        onClick={() => navigate('/menu')}
-      >
-        🏠
-      </button>
+      <button className={styles.agregarDireccionHomeButton} onClick={() => navigate('/')}>🏠</button>
     </div>
   );
 };

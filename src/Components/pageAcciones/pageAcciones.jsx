@@ -39,7 +39,7 @@ const Acciones = () => {
         <Route path="recurso-origen" element={<AgregarRecurso/>} />
         <Route path="tipo-posesion" element={<AgregarTipoPosesion/>} />
           {/* Ruta por defecto para /acciones */}
-          <Route path="/" element={<h1>Selecciona una opción de la lista</h1>} />
+          <Route path="/" element={<h1></h1>} />
         </Routes>
       </div>
     </div>

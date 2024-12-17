@@ -1,0 +1,140 @@
+.agregarUsuarioContainer {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #e5e5e5;
+    font-family: 'Times New Roman';
+    width: 0vw;
+    box-sizing: border-box;
+    margin-left: 240px;
+  }
+  
+  .agregarUsuarioMainContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0px;
+    position: absolute;
+    top: 15%;
+    width: 80%;
+    text-align: center;
+    margin-left: 0px;
+    font-family: 'Times New Roman';
+  }
+  
+  .agregarUsuarioTitle {
+    font-size: 30px;
+    font-weight: bold;
+    margin-top: 25px;
+  }
+  
+  .agregarUsuarioFormContainer {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 1200px;
+    gap: 20px;
+  }
+  
+  .agregarUsuarioFormRow {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  
+  .agregarUsuarioInput {
+    padding: 10px;
+    border: 1px solid #a12d2f;
+    border-radius: 5px;
+    width: 100%;
+    margin-right: 20px;
+  }
+  
+  .agregarUsuarioInput2 {
+    width: 250px; /* Ancho fijo */
+    padding: 10px;
+    border: 1px solid #a12d2f;
+    border-radius: 5px;
+    margin-right: 20px;
+  }
+  
+  .agregarUsuarioSelect {
+    padding: 10px;
+    border: 1px solid #a12d2f;
+    border-radius: 5px;
+    width: 100%;
+    margin-right: 20px;
+  }
+  
+  .agregarUsuarioFormActions {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 20px;
+  }
+  
+  .agregarUsuarioBackButtonAction,
+  .agregarUsuarioAddButton {
+    padding: 10px 20px;
+    background-color: gray;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin: 0 10px;
+  }
+  
+  .agregarUsuarioHomeButton {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #333;
+    color: white;
+    font-size: 24px;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    z-index: 1000;
+  }
+  
+  .agregarUsuarioHomeButton:hover {
+    background-color: #555;
+  }
+  
+  .usuarioTable {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 16px;
+    text-align: left;
+    background-color: #f9f9f9;
+  }
+  
+  .usuarioTable th,
+  .usuarioTable td {
+    border: 1px solid #a12d2f;
+    padding: 12px;
+  }
+  
+  .usuarioTable th {
+    background-color: #a12d2f;
+    color: white;
+    font-weight: bold;
+    text-align: center;
+  }
+  
+  .usuarioTable td {
+    text-align: center;
+  }
+  
+  .usuarioTable tr:nth-child(even) {
+    background-color: #f2f2f2;
+  }
+  
+  .usuarioTable tr:hover {
+    background-color: #e0e0e0;
+  }
+  

@@ -1,0 +1,24 @@
+/* Contenedor principal */
+.container {
+    display: flex;
+    height: calc(100vh - 100px); /* Altura total menos la altura del navbar */
+    overflow: hidden; /* Evita que los elementos se desborden */
+  }
+  
+  /* Sidebar (lista desplegable) */
+  .sidebar {
+    width: 250px; /* Ancho fijo */
+    min-width: 250px; /* Asegura que no se reduzca el ancho */
+    background-color: #a12d2f; /* Fondo rojo oscuro */
+    overflow-y: auto; /* Scroll si el contenido es muy largo */
+    padding: 20px;
+    box-sizing: border-box; /* Incluye padding en el ancho y alto */
+  }
+  
+  /* Contenido principal */
+  .content {
+    flex: 1; /* Ocupa el resto del espacio disponible */
+    padding: 20px;
+    background-color: #f8f9fa; /* Fondo claro */
+    overflow-y: auto; /* Scroll si el contenido es muy largo */
+  }
