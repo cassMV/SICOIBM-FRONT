@@ -30,7 +30,7 @@ const AgregarArea = () => {
     fetchAreas();
   }, []);
 
-  // Función para manejar el envío del formulario
+  // Función para agregar un área
   const handleAddArea = async () => {
     if (!nombreArea.trim()) {
       Swal.fire({
@@ -42,7 +42,7 @@ const AgregarArea = () => {
     }
 
     try {
-      const response = await axios.post('http://localhost:3100/api/area/create-area', {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/area/create-area`, {
         nombre_area: nombreArea,
       });
 
@@ -69,9 +69,54 @@ const AgregarArea = () => {
       Swal.fire({
         icon: 'error',
         title: 'Error en el servidor',
-        text: 'Ocurrió un error al intentar agregar el área. Por favor, intente nuevamente.',
+        text: 'Ocurrió un error al intentar agregar el área.',
       });
     }
+  };
+
+  // Función para eliminar un área con confirmación
+  const handleDeleteArea = async (id) => {
+    Swal.fire({
+      title: '¿Está seguro?',
+      text: 'Esta acción eliminará el área permanentemente.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await axios.delete(
+            `${import.meta.env.VITE_API_URL}/area/delete-area/${id}`
+          );
+
+          if (response.data.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Área eliminada',
+              text: 'El área se ha eliminado exitosamente.',
+              timer: 2000,
+              showConfirmButton: false,
+            });
+
+            // Actualizar la lista de áreas
+            setAreas(areas.filter((area) => area.id_area !== id));
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: response.data.message || 'No se pudo eliminar el área.',
+            });
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error en el servidor',
+            text: 'Ocurrió un error al intentar eliminar el área.',
+          });
+        }
+      }
+    });
   };
 
   return (
@@ -128,7 +173,7 @@ const AgregarArea = () => {
                         </button>
                         <button
                           className={`${styles.actionButton} ${styles.deleteButton}`}
-                          onClick={() => console.log(`Eliminar área ${area.id_area}`)}
+                          onClick={() => handleDeleteArea(area.id_area)}
                         >
                           <span className="material-icons">delete</span>
                         </button>
@@ -141,10 +186,11 @@ const AgregarArea = () => {
           </>
         )}
       </main>
-      <button className={styles.agregarAreaHomeButton} onClick={() => navigate('/')}>🏠</button>
+      <button className={styles.agregarAreaHomeButton} onClick={() => navigate('/')}>
+        🏠
+      </button>
     </div>
   );
 };
 
 export default AgregarArea;
-

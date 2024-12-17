@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { TailSpin } from 'react-loader-spinner'; // Spinner para animación de carga
+import Swal from 'sweetalert2'; // Notificaciones
 import styles from './AgregarMarca.module.css';
 
 function AgregarMarca() {
@@ -9,11 +10,19 @@ function AgregarMarca() {
   const [marcas, setMarcas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Estado del formulario
+  const [formData, setFormData] = useState({
+    nombre_marca: '',
+    status_marca: '',
+  });
+
   // Obtener marcas desde la API
   useEffect(() => {
     const fetchMarcas = async () => {
       try {
-        const response = await axios.get('http://localhost:3100/api/marca/get-marcas');
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/marca/get-marcas`
+        );
         if (response.data.success) {
           setMarcas(response.data.data);
         } else {
@@ -29,32 +38,86 @@ function AgregarMarca() {
     fetchMarcas();
   }, []);
 
+  // Manejo de cambios en los inputs
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  // Función para enviar los datos del formulario
+  const handleAddMarca = async () => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/marca/create-marca`,
+        formData
+      );
+
+      if (response.data.success) {
+        Swal.fire({
+          icon: 'success',
+          title: '¡Marca agregada!',
+          text: 'La marca se ha agregado exitosamente.',
+        });
+        setMarcas([...marcas, response.data.data]); // Actualiza la tabla
+        setFormData({
+          nombre_marca: '',
+          status_marca: '',
+        }); // Limpia el formulario
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudo agregar la marca.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: error.message || 'Error desconocido.',
+      });
+    }
+  };
+
   return (
     <div className={styles.agregarMarcaContainer}>
       <main className={`${styles.agregarMarcaMainContent} ${styles.fadeIn}`}>
         <h2 className={styles.agregarMarcaTitle}>Agregar Marca</h2>
         <div className={styles.agregarMarcaFormContainer}>
-          <input
-            type="text"
-            placeholder="Marca (ID)"
-            className={styles.agregarMarcaInput2}
-          />
           <div className={styles.agregarMarcaFormRow}>
             <input
               type="text"
               placeholder="Nombre de la marca"
               className={styles.agregarMarcaInput}
+              name="nombre_marca"
+              value={formData.nombre_marca}
+              onChange={handleInputChange}
             />
-            <select className={styles.agregarMarcaSelect}>
+            <select
+              className={styles.agregarMarcaSelect}
+              name="status_marca"
+              value={formData.status_marca}
+              onChange={handleInputChange}
+            >
               <option value="">Status de la marca</option>
-              <option value="Activa">Activa</option>
-              <option value="Inactiva">Inactiva</option>
+              <option value="Activo">Activa</option>
+              <option value="Inactivo">Inactiva</option>
             </select>
           </div>
         </div>
         <div className={styles.agregarMarcaFormActions}>
-          <button className={styles.agregarMarcaBackButtonAction}>Atrás</button>
-          <button className={styles.agregarMarcaAddButton}>Agregar</button>
+          <button
+            className={styles.agregarMarcaBackButtonAction}
+            onClick={() => navigate(-1)}
+          >
+            Atrás
+          </button>
+          <button
+            className={styles.agregarMarcaAddButton}
+            onClick={handleAddMarca}
+          >
+            Agregar
+          </button>
         </div>
 
         {/* Spinner o tabla de marcas */}
@@ -71,7 +134,7 @@ function AgregarMarca() {
                   <th>ID</th>
                   <th>Nombre</th>
                   <th>Status</th>
-                  <th>Opciones</th> {/* Columna para botones */}
+                  <th>Opciones</th>
                 </tr>
               </thead>
               <tbody>

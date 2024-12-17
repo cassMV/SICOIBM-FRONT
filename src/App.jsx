@@ -3,7 +3,7 @@ import Navbar from "./Components/navbar/navbar.jsx";
 import Acciones from "./Components/pageAcciones/pageAcciones.jsx";
 import Menu from "./Components/Menu/Menu.jsx";
 import Usuarios from "./Components/pageUsuarios/pageUsuarios.jsx"
-import axios from "axios";
+import Resguardos from "./Components/pageResguardos/pageResguardos.jsx"
 
 
 

@@ -2,18 +2,31 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { TailSpin } from "react-loader-spinner"; // Spinner para animación de carga
+import Swal from "sweetalert2"; // Notificaciones
 import styles from "./AgregarProducto.module.css";
 
 const AgregarProducto = () => {
   const navigate = useNavigate();
   const [productos, setProductos] = useState([]);
+  const [marcas, setMarcas] = useState([]); // Estado para las marcas
   const [isLoading, setIsLoading] = useState(true);
+
+  // Estado del formulario
+  const [formData, setFormData] = useState({
+    nombre_producto: "",
+    modelo: "",
+    ruta_imagen: "",
+    caracteristicas: "",
+    id_marca: "", // Para manejar el select de marcas
+  });
 
   // Obtener productos desde la API
   useEffect(() => {
     const fetchProductos = async () => {
       try {
-        const response = await axios.get("http://localhost:3100/api/producto/get-productos");
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/producto/get-productos`
+        );
         if (response.data.success) {
           setProductos(response.data.data);
         } else {
@@ -22,38 +35,109 @@ const AgregarProducto = () => {
       } catch (error) {
         console.error("Error al obtener los productos:", error);
       } finally {
-        setIsLoading(false); // Termina la carga
+        setIsLoading(false);
       }
     };
 
     fetchProductos();
   }, []);
 
+  // Obtener marcas desde la API
+  useEffect(() => {
+    const fetchMarcas = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/marca/get-marcas`
+        );
+        if (response.data.success) {
+          setMarcas(response.data.data);
+        } else {
+          console.error("Error al obtener las marcas:", response.data.message);
+        }
+      } catch (error) {
+        console.error("Error al obtener las marcas:", error);
+      }
+    };
+
+    fetchMarcas();
+  }, []);
+
+  // Manejo de cambios en los inputs
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: name === "id_marca" ? Number(value) : value, // Convierte id_marca a número
+    });
+  };
+
+  // Función para enviar los datos del formulario
+  const handleAddProducto = async () => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/producto/create-producto`,
+        formData
+      );
+
+      if (response.data.success) {
+        Swal.fire({
+          icon: "success",
+          title: "¡Producto agregado!",
+          text: "El producto se ha agregado exitosamente.",
+        });
+        setProductos([...productos, response.data.data]); // Actualiza la tabla
+        setFormData({
+          nombre_producto: "",
+          modelo: "",
+          ruta_imagen: "",
+          caracteristicas: "",
+          id_marca: "",
+        }); // Limpia el formulario
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: response.data.message || "No se pudo agregar el producto.",
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error en el servidor",
+        text: error.message || "Error desconocido.",
+      });
+    }
+  };
+
   return (
     <div className={styles.agregarProductoContainer}>
       <main className={`${styles.agregarProductoMainContent} ${styles.fadeIn}`}>
         <h2 className={styles.agregarProductoTitle}>Agregar Producto</h2>
         <div className={styles.agregarProductoFormContainer}>
-          <input
-            type="text"
-            placeholder="Producto (ID)"
-            className={styles.agregarProductoInput2}
-          />
           <div className={styles.agregarProductoFormRow}>
             <input
               type="text"
               placeholder="Nombre del producto"
               className={styles.agregarProductoInput}
+              name="nombre_producto"
+              value={formData.nombre_producto}
+              onChange={handleInputChange}
             />
             <input
               type="text"
               placeholder="Modelo"
               className={styles.agregarProductoInput}
+              name="modelo"
+              value={formData.modelo}
+              onChange={handleInputChange}
             />
             <input
               type="text"
               placeholder="Ruta imagen"
               className={styles.agregarProductoInput}
+              name="ruta_imagen"
+              value={formData.ruta_imagen}
+              onChange={handleInputChange}
             />
           </div>
           <div className={styles.agregarProductoFormRow}>
@@ -61,19 +145,39 @@ const AgregarProducto = () => {
               type="text"
               placeholder="Características"
               className={styles.agregarProductoInput}
+              name="caracteristicas"
+              value={formData.caracteristicas}
+              onChange={handleInputChange}
             />
-            <input
-              type="text"
-              placeholder="Marca (ID)"
-              className={styles.agregarProductoInput2}
-            />
+            {/* Select para las marcas */}
+            <select
+              name="id_marca"
+              className={styles.agregarProductoSelect}
+              value={formData.id_marca}
+              onChange={handleInputChange}
+            >
+              <option value="">Seleccione una marca</option>
+              {marcas.map((marca) => (
+                <option key={marca.id_marca} value={marca.id_marca}>
+                  {marca.nombre_marca}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
         <div className={styles.agregarProductoFormActions}>
-          <button className={styles.agregarProductoBackButtonAction}>
+          <button
+            className={styles.agregarProductoBackButtonAction}
+            onClick={() => navigate(-1)}
+          >
             Atrás
           </button>
-          <button className={styles.agregarProductoAddButton}>Agregar</button>
+          <button
+            className={styles.agregarProductoAddButton}
+            onClick={handleAddProducto}
+          >
+            Agregar
+          </button>
         </div>
 
         {/* Spinner o tabla de productos */}
@@ -93,7 +197,7 @@ const AgregarProducto = () => {
                   <th>Ruta Imagen</th>
                   <th>Características</th>
                   <th>Marca</th>
-                  <th>Opciones</th> {/* Nueva columna para los botones */}
+                  <th>Opciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -110,9 +214,7 @@ const AgregarProducto = () => {
                         <button
                           className={`${styles.actionButton} ${styles.editButton}`}
                           onClick={() =>
-                            console.log(
-                              `Editar producto ${producto.id_producto}`
-                            )
+                            console.log(`Editar producto ${producto.id_producto}`)
                           }
                         >
                           <span className="material-icons">edit</span>
@@ -120,9 +222,7 @@ const AgregarProducto = () => {
                         <button
                           className={`${styles.actionButton} ${styles.deleteButton}`}
                           onClick={() =>
-                            console.log(
-                              `Eliminar producto ${producto.id_producto}`
-                            )
+                            console.log(`Eliminar producto ${producto.id_producto}`)
                           }
                         >
                           <span className="material-icons">delete</span>
@@ -136,12 +236,6 @@ const AgregarProducto = () => {
           </>
         )}
       </main>
-      <button
-        className={styles.agregarProductoHomeButton}
-        onClick={() => navigate("/menu")}
-      >
-        🏠
-      </button>
     </div>
   );
 };

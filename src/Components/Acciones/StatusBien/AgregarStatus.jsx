@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { TailSpin } from 'react-loader-spinner'; // Spinner para animación de carga
+import Swal from 'sweetalert2'; // Notificaciones
 import styles from './AgregarStatus.module.css';
 
 const AgregarStatus = () => {
@@ -9,11 +10,18 @@ const AgregarStatus = () => {
   const [statusBien, setStatusBien] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Estado para los valores del formulario
+  const [formData, setFormData] = useState({
+    descripcion_status: '',
+  });
+
   // Obtener status del bien desde la API
   useEffect(() => {
     const fetchStatusBien = async () => {
       try {
-        const response = await axios.get('http://localhost:3100/api/status-bien/get-status-bien');
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/status-bien/get-status-bien`
+        );
         if (response.data.success) {
           setStatusBien(response.data.data);
         } else {
@@ -29,29 +37,77 @@ const AgregarStatus = () => {
     fetchStatusBien();
   }, []);
 
+  // Manejo de cambios en los inputs
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  // Función para enviar los datos del formulario
+  const handleAddStatus = async () => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/status-bien/create-status-bien`,
+        formData
+      );
+
+      if (response.data.success) {
+        Swal.fire({
+          icon: 'success',
+          title: '¡Status agregado!',
+          text: 'El status del bien se ha agregado exitosamente.',
+        });
+        setStatusBien([...statusBien, response.data.data]); // Actualiza la tabla
+        setFormData({ descripcion_status: '' }); // Limpia el formulario
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudo agregar el status.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: error.message || 'Error desconocido.',
+      });
+    }
+  };
+
   return (
     <div className={styles.agregarStatusContainer}>
       <main className={`${styles.agregarStatusMainContent} ${styles.fadeIn}`}>
         <h2 className={styles.agregarStatusTitle}>Agregar Status del Bien</h2>
         <div className={styles.agregarStatusFormContainer}>
           <div className={styles.agregarStatusFormRow}>
-            <input
-              type="text"
-              placeholder="Status del Bien (ID)"
-              className={styles.agregarStatusInput2}
-            />
-            <select className={styles.agregarStatusSelect}>
+            <select
+              className={styles.agregarStatusSelect}
+              name="descripcion_status"
+              value={formData.descripcion_status}
+              onChange={handleInputChange}
+            >
               <option value="">Seleccionar Status</option>
               <option value="Asignado">Asignado</option>
               <option value="Extraviado">Extraviado</option>
-              <option value="Dado de baja">Dado de baja</option>
+              <option value="Dado_de_baja">Dado de baja</option>
               <option value="Reasignado">Reasignado</option>
             </select>
           </div>
         </div>
         <div className={styles.agregarStatusFormActions}>
-          <button className={styles.agregarStatusBackButtonAction}>Atrás</button>
-          <button className={styles.agregarStatusAddButton}>Agregar</button>
+          <button
+            className={styles.agregarStatusBackButtonAction}
+            onClick={() => navigate(-1)}
+          >
+            Atrás
+          </button>
+          <button
+            className={styles.agregarStatusAddButton}
+            onClick={handleAddStatus}
+          >
+            Agregar
+          </button>
         </div>
 
         {/* Spinner o tabla de estados */}
@@ -67,7 +123,7 @@ const AgregarStatus = () => {
                 <tr>
                   <th>ID</th>
                   <th>Descripción</th>
-                  <th>Opciones</th> {/* Columna para botones */}
+                  <th>Opciones</th>
                 </tr>
               </thead>
               <tbody>

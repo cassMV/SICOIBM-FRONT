@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { TailSpin } from 'react-loader-spinner'; // Spinner para animación de carga
+import Swal from 'sweetalert2'; // Notificaciones
 import styles from './AgregarTipoAlta.module.css';
 
 function AgregarTipoAlta() {
@@ -9,11 +10,18 @@ function AgregarTipoAlta() {
   const [tiposAlta, setTiposAlta] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Estado del formulario
+  const [formData, setFormData] = useState({
+    descripcion_alta: '',
+  });
+
   // Obtener tipos de alta desde la API
   useEffect(() => {
     const fetchTiposAlta = async () => {
       try {
-        const response = await axios.get('http://localhost:3100/api/tipo-alta/get-tipos-alta');
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/tipo-alta/get-tipos-alta`
+        );
         if (response.data.success) {
           setTiposAlta(response.data.data);
         } else {
@@ -22,12 +30,50 @@ function AgregarTipoAlta() {
       } catch (error) {
         console.error('Error al obtener los tipos de alta:', error);
       } finally {
-        setIsLoading(false); // Termina la carga
+        setIsLoading(false);
       }
     };
 
     fetchTiposAlta();
   }, []);
+
+  // Manejo de cambios en el formulario
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  // Función para enviar los datos del formulario
+  const handleAddTipoAlta = async () => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/tipo-alta/create-tipo-alta`,
+        formData
+      );
+
+      if (response.data.success) {
+        Swal.fire({
+          icon: 'success',
+          title: '¡Tipo de Alta Agregado!',
+          text: 'El tipo de alta se ha agregado exitosamente.',
+        });
+        setTiposAlta([...tiposAlta, response.data.data]); // Actualiza la tabla
+        setFormData({ descripcion_alta: '' }); // Limpia el formulario
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudo agregar el tipo de alta.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: error.message || 'Error desconocido.',
+      });
+    }
+  };
 
   return (
     <div className={styles.agregarTipoAltaContainer}>
@@ -35,12 +81,12 @@ function AgregarTipoAlta() {
         <h2 className={styles.agregarTipoAltaTitle}>Agregar Tipo de Alta</h2>
         <div className={styles.agregarTipoAltaFormContainer}>
           <div className={styles.agregarTipoAltaFormRow}>
-            <input
-              type="text"
-              placeholder="Tipo Alta (ID)"
-              className={styles.agregarTipoAltaInput2}
-            />
-            <select className={styles.agregarTipoAltaSelect}>
+            <select
+              className={styles.agregarTipoAltaSelect}
+              name="descripcion_alta"
+              value={formData.descripcion_alta}
+              onChange={handleInputChange}
+            >
               <option value="">Descripción Alta</option>
               <option value="Compra">Compra</option>
               <option value="Asignacion">Asignación</option>
@@ -50,8 +96,18 @@ function AgregarTipoAlta() {
           </div>
         </div>
         <div className={styles.agregarTipoAltaFormActions}>
-          <button className={styles.agregarTipoAltaBackButtonAction}>Atrás</button>
-          <button className={styles.agregarTipoAltaAddButton}>Agregar</button>
+          <button
+            className={styles.agregarTipoAltaBackButtonAction}
+            onClick={() => navigate(-1)}
+          >
+            Atrás
+          </button>
+          <button
+            className={styles.agregarTipoAltaAddButton}
+            onClick={handleAddTipoAlta}
+          >
+            Agregar
+          </button>
         </div>
 
         {/* Spinner o tabla de tipos de alta */}
@@ -67,7 +123,7 @@ function AgregarTipoAlta() {
                 <tr>
                   <th>ID</th>
                   <th>Descripción</th>
-                  <th>Opciones</th> {/* Columna para botones */}
+                  <th>Opciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -79,13 +135,17 @@ function AgregarTipoAlta() {
                       <div className={styles.buttonGroup}>
                         <button
                           className={`${styles.actionButton} ${styles.editButton}`}
-                          onClick={() => console.log(`Editar tipo de alta ${tipoAlta.id_tipo_alta}`)}
+                          onClick={() =>
+                            console.log(`Editar tipo de alta ${tipoAlta.id_tipo_alta}`)
+                          }
                         >
                           <span className="material-icons">edit</span>
                         </button>
                         <button
                           className={`${styles.actionButton} ${styles.deleteButton}`}
-                          onClick={() => console.log(`Eliminar tipo de alta ${tipoAlta.id_tipo_alta}`)}
+                          onClick={() =>
+                            console.log(`Eliminar tipo de alta ${tipoAlta.id_tipo_alta}`)
+                          }
                         >
                           <span className="material-icons">delete</span>
                         </button>

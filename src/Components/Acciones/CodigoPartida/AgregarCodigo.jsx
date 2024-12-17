@@ -2,19 +2,30 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { TailSpin } from 'react-loader-spinner'; // Spinner para animación de carga
+import Swal from 'sweetalert2'; // Notificaciones
 import styles from './AgregarCodigo.module.css';
 
 function AgregarCodigo() {
   const navigate = useNavigate();
   const [partidas, setPartidas] = useState([]);
+  const [subcuentas, setSubcuentas] = useState([]); // Estado para subcuentas
   const [isLoading, setIsLoading] = useState(true);
+
+  // Estado del formulario
+  const [formData, setFormData] = useState({
+    codigo_partida: '',
+    nombre_partida: '',
+    borrador_partida: false,
+    status_partida: '',
+    id_subcuenta: '',
+  });
 
   // Obtener partidas desde la API
   useEffect(() => {
     const fetchPartidas = async () => {
       try {
         const response = await axios.get(
-          'http://localhost:3100/api/codigo-partida-especifica/get-partidas'
+          `${import.meta.env.VITE_API_URL}/codigo-partida-especifica/get-partidas`
         );
         if (response.data.success) {
           setPartidas(response.data.data);
@@ -31,49 +42,143 @@ function AgregarCodigo() {
     fetchPartidas();
   }, []);
 
+  // Obtener subcuentas desde la API
+  useEffect(() => {
+    const fetchSubcuentas = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/subcuenta-armonizada/get-subcuentas`
+        );
+        if (response.data.success) {
+          setSubcuentas(response.data.data);
+        } else {
+          console.error('Error al obtener las subcuentas:', response.data.message);
+        }
+      } catch (error) {
+        console.error('Error al obtener las subcuentas:', error);
+      }
+    };
+
+    fetchSubcuentas();
+  }, []);
+
+  // Manejo de cambios en los inputs
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: type === 'checkbox' ? checked : name === 'id_subcuenta' ? Number(value) : value,
+    });
+  };
+
+  // Función para enviar los datos del formulario
+  const handleAddPartida = async () => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/codigo-partida-especifica/create-partida`,
+        formData
+      );
+
+      if (response.data.success) {
+        Swal.fire({
+          icon: 'success',
+          title: '¡Partida agregada!',
+          text: 'La partida específica se ha agregado exitosamente.',
+        });
+        setPartidas([...partidas, response.data.data]); // Actualiza la tabla
+        setFormData({
+          codigo_partida: '',
+          nombre_partida: '',
+          borrador_partida: false,
+          status_partida: '',
+          id_subcuenta: '',
+        }); // Limpia el formulario
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudo agregar la partida.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: error.message || 'Error desconocido.',
+      });
+    }
+  };
+
   return (
     <div className={styles.agregarCodigoContainer}>
       <main className={`${styles.agregarCodigoMainContent} ${styles.fadeIn}`}>
         <h2 className={styles.agregarCodigoTitle}>Agregar Código de Partida Específica</h2>
         <div className={styles.agregarCodigoFormContainer}>
-          <input
-            type="text"
-            placeholder="Código de Partida Específica (ID)"
-            className={styles.agregarCodigoInput2}
-          />
           <div className={styles.agregarBajaBienFormRow}>
             <input
               type="text"
               placeholder="Código Partida"
               className={styles.agregarCodigoInput}
+              name="codigo_partida"
+              value={formData.codigo_partida}
+              onChange={handleInputChange}
             />
             <input
               type="text"
               placeholder="Nombre de la Partida"
               className={styles.agregarCodigoInput}
+              name="nombre_partida"
+              value={formData.nombre_partida}
+              onChange={handleInputChange}
             />
-            <input
-              type="text"
-              placeholder="Borrador Partida"
-              className={styles.agregarCodigoInput}
-            />
+            <label>
+              <input
+                type="checkbox"
+                name="borrador_partida"
+                checked={formData.borrador_partida}
+                onChange={handleInputChange}
+              />
+              Borrador
+            </label>
           </div>
           <div className={styles.agregarBajaBienFormRow}>
             <input
               type="text"
               placeholder="Status Partida"
               className={styles.agregarCodigoInput}
+              name="status_partida"
+              value={formData.status_partida}
+              onChange={handleInputChange}
             />
-            <input
-              type="text"
-              placeholder="Subcuenta Armonizada (ID)"
+            {/* Select para Subcuenta Armonizada */}
+            <select
               className={styles.agregarCodigoInput}
-            />
+              name="id_subcuenta"
+              value={formData.id_subcuenta}
+              onChange={handleInputChange}
+            >
+              <option value="">Seleccione una Subcuenta</option>
+              {subcuentas.map((subcuenta) => (
+                <option key={subcuenta.id_subcuenta} value={subcuenta.id_subcuenta}>
+                  {subcuenta.nombre_subcuenta}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
         <div className={styles.agregarCodigoFormActions}>
-          <button className={styles.agregarCodigoBackButtonAction}>Atrás</button>
-          <button className={styles.agregarCodigoAddButton}>Agregar</button>
+          <button
+            className={styles.agregarCodigoBackButtonAction}
+            onClick={() => navigate(-1)}
+          >
+            Atrás
+          </button>
+          <button
+            className={styles.agregarCodigoAddButton}
+            onClick={handleAddPartida}
+          >
+            Agregar
+          </button>
         </div>
 
         {/* Spinner o tabla de partidas */}
@@ -92,8 +197,8 @@ function AgregarCodigo() {
                   <th>Nombre</th>
                   <th>Borrador</th>
                   <th>Status</th>
-                  <th>Subcuenta ID</th>
-                  <th>Opciones</th> {/* Columna para botones */}
+                  <th>Subcuenta</th>
+                  <th>Opciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -128,12 +233,6 @@ function AgregarCodigo() {
           </>
         )}
       </main>
-      <button
-        className={styles.agregarCodigoHomeButton}
-        onClick={() => navigate('/menu')}
-      >
-        🏠
-      </button>
     </div>
   );
 }

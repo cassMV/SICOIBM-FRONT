@@ -2,59 +2,75 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { TailSpin } from "react-loader-spinner"; // Spinner para animación de carga
-import Swal from "sweetalert2"; // SweetAlert para notificaciones
+import Swal from "sweetalert2"; // Notificaciones
 import styles from "./AgregarEmpleado.module.css";
 
 const AgregarEmpleado = () => {
   const navigate = useNavigate();
   const [empleados, setEmpleados] = useState([]);
+  const [areas, setAreas] = useState([]); // Estado para áreas
   const [isLoading, setIsLoading] = useState(true);
 
-  // Estado para los valores del formulario
+  // Estado del formulario
   const [formData, setFormData] = useState({
     nombre_empleado: "",
     correo_electronico: "",
     rfc: "",
     numero_contacto: "",
     status_empleado: "",
-    id_area: 0,
+    id_area: "",
   });
 
-  // Obtener empleados desde la API
+  // Obtener empleados
   useEffect(() => {
     const fetchEmpleados = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3100/api/empleado/get-empleados"
+          `${import.meta.env.VITE_API_URL}/empleado/get-empleados`
         );
         if (response.data.success) {
           setEmpleados(response.data.data);
-        } else {
-          console.error("Error:", response.data.message);
         }
       } catch (error) {
         console.error("Error al obtener los empleados:", error);
       } finally {
-        setIsLoading(false); // Termina la carga
+        setIsLoading(false);
       }
     };
     fetchEmpleados();
   }, []);
 
-  // Manejo de cambios en los inputs
+  // Obtener áreas
+  useEffect(() => {
+    const fetchAreas = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/area/get-areas`
+        );
+        if (response.data.success) {
+          setAreas(response.data.data);
+        }
+      } catch (error) {
+        console.error("Error al obtener las áreas:", error);
+      }
+    };
+    fetchAreas();
+  }, []);
+
+  // Manejo de cambios en inputs
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: name === "id_area" ? Number(value) : value, // Convierte a número si es 'id_area'
+      [name]: name === "id_area" ? Number(value) : value,
     });
   };
 
-  // Función para manejar el envío del formulario
+  // Agregar empleado
   const handleAddEmpleado = async () => {
     try {
       const response = await axios.post(
-        "http://localhost:3100/api/empleado/create-empleado",
+        `${import.meta.env.VITE_API_URL}/empleado/create-empleado`,
         formData
       );
       if (response.data.success) {
@@ -63,7 +79,7 @@ const AgregarEmpleado = () => {
           title: "¡Empleado agregado!",
           text: "El empleado se ha agregado exitosamente.",
         });
-        setEmpleados([...empleados, response.data.data]); // Actualiza la lista de empleados
+        setEmpleados([...empleados, response.data.data]);
         setFormData({
           nombre_empleado: "",
           correo_electronico: "",
@@ -71,7 +87,7 @@ const AgregarEmpleado = () => {
           numero_contacto: "",
           status_empleado: "",
           id_area: "",
-        }); // Limpia el formulario
+        });
       } else {
         Swal.fire({
           icon: "error",
@@ -83,7 +99,7 @@ const AgregarEmpleado = () => {
       Swal.fire({
         icon: "error",
         title: "Error en el servidor",
-        text: error,
+        text: error.message || "Error desconocido.",
       });
     }
   };
@@ -92,8 +108,6 @@ const AgregarEmpleado = () => {
     <div className={styles.agregarEmpleadoContainer}>
       <main className={`${styles.agregarEmpleadoMainContent} ${styles.fadeIn}`}>
         <h2 className={styles.agregarEmpleadoTitle}>Agregar Empleado</h2>
-
-        {/* Formulario de agregar empleado */}
         <div className={styles.agregarEmpleadoFormContainer}>
           <div className={styles.agregarEmpleadoFormRow}>
             <input
@@ -133,20 +147,24 @@ const AgregarEmpleado = () => {
             <input
               type="text"
               name="status_empleado"
-              placeholder="Número status"
+              placeholder="Estatus"
               className={styles.agregarEmpleadoInput}
               value={formData.status_empleado}
               onChange={handleInputChange}
             />
-
-            <input
-              type="number"
+            <select
               name="id_area"
-              placeholder="Área (ID)"
               className={styles.agregarEmpleadoInput}
               value={formData.id_area}
               onChange={handleInputChange}
-            />
+            >
+              <option value="">Seleccione un Área</option>
+              {areas.map((area) => (
+                <option key={area.id_area} value={area.id_area}>
+                  {area.nombre_area}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
         <div className={styles.agregarEmpleadoFormActions}>
@@ -164,7 +182,6 @@ const AgregarEmpleado = () => {
           </button>
         </div>
 
-        {/* Spinner o tabla de empleados */}
         {isLoading ? (
           <div className={styles.spinnerContainer}>
             <TailSpin height="80" width="80" color="red" ariaLabel="loading" />
@@ -182,6 +199,7 @@ const AgregarEmpleado = () => {
                   <th>Contacto</th>
                   <th>Status</th>
                   <th>Área</th>
+                  <th>Opciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -194,6 +212,20 @@ const AgregarEmpleado = () => {
                     <td>{empleado.numero_contacto}</td>
                     <td>{empleado.status_empleado}</td>
                     <td>{empleado.id_area}</td>
+                    <td>
+                      <div className={styles.buttonGroup}>
+                      <button
+                          className={`${styles.actionButton} ${styles.editButton}`}
+                        >
+                          <span className="material-icons">edit</span>
+                        </button>
+                        <button
+                          className={`${styles.actionButton} ${styles.deleteButton}`}
+                        >
+                          <span className="material-icons">delete</span>
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -201,13 +233,6 @@ const AgregarEmpleado = () => {
           </>
         )}
       </main>
-
-      <button
-        className={styles.agregarEmpleadoHomeButton}
-        onClick={() => navigate("/menu")}
-      >
-        🏠
-      </button>
     </div>
   );
 };

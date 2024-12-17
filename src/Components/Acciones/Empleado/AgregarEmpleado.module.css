@@ -201,5 +201,48 @@
   animation: fadeIn 0.5s ease-in; /* Se agrega la animación */
 }
 
+.editButton {
+  background-color: #28a745;
+  color: white;
+}
+
+.deleteButton {
+  background-color: #dc3545;
+  color: white;
+}
+
+.editButton:hover {
+  background-color: #218838;
+}
+
+.deleteButton:hover {
+  background-color: #c82333;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.actionButton {
+  padding: 5px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 35px;
+  height: 35px;
+}
+
 /* Mantén el resto de los estilos que ya tenías */
 
