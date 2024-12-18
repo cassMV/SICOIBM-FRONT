@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { TailSpin } from "react-loader-spinner"; // Spinner para animación de carga
-import Swal from "sweetalert2"; // Notificaciones
+import { TailSpin } from "react-loader-spinner";
+import Swal from "sweetalert2";
 import styles from "./AgregarEmpleado.module.css";
 
 const AgregarEmpleado = () => {
   const navigate = useNavigate();
   const [empleados, setEmpleados] = useState([]);
-  const [areas, setAreas] = useState([]); // Estado para áreas
+  const [areas, setAreas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Estado del formulario
@@ -20,6 +20,10 @@ const AgregarEmpleado = () => {
     status_empleado: "",
     id_area: "",
   });
+
+  const [editMode, setEditMode] = useState(false); // Indica si estamos en modo edición
+  const [selectedEmpleadoId, setSelectedEmpleadoId] = useState(null); // ID del empleado a editar
+  const [originalData, setOriginalData] = useState({}); // Datos originales del empleado
 
   // Obtener empleados
   useEffect(() => {
@@ -104,54 +108,111 @@ const AgregarEmpleado = () => {
     }
   };
 
-  const handleDeleteEmpleado = async (id) => {
-    Swal.fire({
-      title: '¿Está seguro?',
-      text: 'Esta acción eliminará el empleado permanentemente.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          const response = await axios.delete(
-            `${import.meta.env.VITE_API_URL}/empleado/delete-empleado/${id}`
-          );
+  // Manejar edición de empleado
+  const handleEditEmpleado = async (id) => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/empleado/get-empleado/${id}`
+      );
+      if (response.data.success) {
+        setFormData(response.data.data); // Rellena el formulario con los datos del empleado
+        setOriginalData(response.data.data); // Almacena los datos originales
+        setEditMode(true);
+        setSelectedEmpleadoId(id); // Guarda el ID del empleado en edición
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: response.data.message || "No se pudo obtener los datos del empleado.",
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error en el servidor",
+        text: error.message || "Error desconocido.",
+      });
+    }
+  };
 
-          if (response.data.success) {
+  // Guardar cambios en un empleado
+  const handleUpdateEmpleado = async () => {
+    try {
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_URL}/empleado/update-empleado/${selectedEmpleadoId}`,
+        formData
+      );
+      if (response.data.success) {
+        const changes = Object.entries(formData)
+          .filter(([key, value]) => value !== originalData[key])
+          .map(([key, value]) => {
+            const displayValue =
+              key === "id_area"
+                ? `${areas.find((area) => area.id_area === originalData[key])?.nombre_area || "Sin área"} → ${areas.find((area) => area.id_area === value)?.nombre_area || "Sin área"}`
+                : `${originalData[key]} → ${value}`;
+            return `<p><b>${key}:</b> ${displayValue}</p>`;
+          })
+          .join("");
+
+        Swal.fire({
+          title: "Confirmar Cambios",
+          html: changes.length > 0 ? changes : "<p>No hay cambios realizados.</p>",
+          icon: "info",
+          showCancelButton: true,
+          confirmButtonText: "Guardar",
+          cancelButtonText: "Cancelar",
+        }).then((result) => {
+          if (result.isConfirmed) {
             Swal.fire({
-              icon: 'success',
-              title: 'Empleado eliminada',
-              text: 'El empleado se ha eliminado exitosamente.',
-              timer: 2000,
-              showConfirmButton: false,
+              icon: "success",
+              title: "Cambios guardados",
+              text: "El empleado se ha actualizado exitosamente.",
             });
 
             // Actualizar la lista de empleados
-            setEmpleados(empleados.filter((empleado) => empleado.id_empleado !== id));
-          } else {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: response.data.message || 'No se pudo eliminar el empleado.',
+            setEmpleados(
+              empleados.map((empleado) =>
+                empleado.id_empleado === selectedEmpleadoId
+                  ? { ...empleado, ...formData }
+                  : empleado
+              )
+            );
+
+            // Resetear el formulario
+            setFormData({
+              nombre_empleado: "",
+              correo_electronico: "",
+              rfc: "",
+              numero_contacto: "",
+              status_empleado: "",
+              id_area: "",
             });
+            setEditMode(false);
+            setSelectedEmpleadoId(null);
           }
-        } catch (error) {
-          Swal.fire({
-            icon: 'error',
-            title: 'Error en el servidor',
-            text: 'Ocurrió un error al intentar eliminar el empleado.',
-          });
-        }
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: response.data.message || "No se pudo actualizar el empleado.",
+        });
       }
-    });
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error en el servidor",
+        text: error.message || "Error desconocido.",
+      });
+    }
   };
 
   return (
     <div className={styles.agregarEmpleadoContainer}>
       <main className={`${styles.agregarEmpleadoMainContent} ${styles.fadeIn}`}>
-        <h2 className={styles.agregarEmpleadoTitle}>Agregar Empleado</h2>
+        <h2 className={styles.agregarEmpleadoTitle}>
+          {editMode ? "Editar Empleado" : "Agregar Empleado"}
+        </h2>
         <div className={styles.agregarEmpleadoFormContainer}>
           <div className={styles.agregarEmpleadoFormRow}>
             <input
@@ -218,12 +279,21 @@ const AgregarEmpleado = () => {
           >
             Atrás
           </button>
-          <button
-            className={styles.agregarEmpleadoAddButton}
-            onClick={handleAddEmpleado}
-          >
-            Agregar
-          </button>
+          {editMode ? (
+            <button
+              className={styles.agregarEmpleadoSaveButton}
+              onClick={handleUpdateEmpleado}
+            >
+              Guardar Cambios
+            </button>
+          ) : (
+            <button
+              className={styles.agregarEmpleadoAddButton}
+              onClick={handleAddEmpleado}
+            >
+              Agregar
+            </button>
+          )}
         </div>
 
         {isLoading ? (
@@ -255,20 +325,27 @@ const AgregarEmpleado = () => {
                     <td>{empleado.rfc}</td>
                     <td>{empleado.numero_contacto}</td>
                     <td>{empleado.status_empleado}</td>
-                    <td>{empleado.id_area}</td>
+                    <td>{areas.find((area) => area.id_area === empleado.id_area)?.nombre_area || "Sin área"}</td>
                     <td>
                       <div className={styles.buttonGroup}>
                         <button
                           className={`${styles.actionButton} ${styles.editButton}`}
+                          onClick={() => handleEditEmpleado(empleado.id_empleado)}
                         >
                           <span className="material-icons">edit</span>
                         </button>
                         <button
                           className={`${styles.actionButton} ${styles.deleteButton}`}
-                          onClick={() => handleDeleteEmpleado(empleado.id_empleado)}
+                          onClick={() =>
+                            Swal.fire({
+                              icon: "info",
+                              title: "Función no implementada",
+                              text: "La eliminación de empleados aún no está disponible.",
+                            })
+                          }
                         >
                           <span className="material-icons">delete</span>
-                        </button>
+                          </button>
                       </div>
                     </td>
                   </tr>
@@ -283,3 +360,4 @@ const AgregarEmpleado = () => {
 };
 
 export default AgregarEmpleado;
+

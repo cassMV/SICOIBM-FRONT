@@ -10,6 +10,9 @@ function AgregarDocumento() {
   const [documentos, setDocumentos] = useState([]);
   const [bienes, setBienes] = useState([]); // Estado para los bienes
   const [isLoading, setIsLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false); // Modo edición
+  const [selectedDocumentoId, setSelectedDocumentoId] = useState(null); // ID del documento en edición
+  const [originalData, setOriginalData] = useState({}); // Datos originales del documento
 
   // Estado del formulario
   const [formData, setFormData] = useState({
@@ -50,7 +53,6 @@ function AgregarDocumento() {
         );
         if (response.data.success) {
           setBienes(response.data.data);
-          console(response.data.data)
         }
       } catch (error) {
         console.error('Error al obtener los bienes:', error);
@@ -63,13 +65,22 @@ function AgregarDocumento() {
   // Manejo de cambios en el formulario
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    const formattedValue =
-      name === 'fecha_documento' ? new Date(value).toISOString() : value;
-
     setFormData({
       ...formData,
-      [name]: name === 'id_bien' ? Number(value) : formattedValue,
+      [name]: name === 'id_bien' ? Number(value) : value,
     });
+  };
+
+  const formatISODate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toISOString();
+  };
+
+  const prepareFormData = () => {
+    return {
+      ...formData,
+      fecha_documento: formatISODate(formData.fecha_documento),
+    };
   };
 
   // Función para enviar los datos del formulario
@@ -77,7 +88,7 @@ function AgregarDocumento() {
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/documentos/create-documento`,
-        formData
+        prepareFormData()
       );
 
       if (response.data.success) {
@@ -111,10 +122,114 @@ function AgregarDocumento() {
     }
   };
 
+  // Función para cargar datos para edición
+  const handleEditDocumento = async (id) => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/documentos/get-documento/${id}`
+      );
+      if (response.data.success) {
+        const documento = response.data.data;
+        setFormData({
+          factura_documento: documento.factura_documento,
+          fecha_documento: documento.fecha_documento,
+          estatus_legal: documento.estatus_legal,
+          documento_ampare_propiedad: documento.documento_ampare_propiedad,
+          comentarios: documento.comentarios,
+          id_bien: documento.id_bien,
+        });
+        setOriginalData(documento); // Guardar los datos originales
+        setEditMode(true);
+        setSelectedDocumentoId(id);
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudo cargar el documento.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: error.message || 'Error desconocido.',
+      });
+    }
+  };
+
+  // Guardar cambios en el documento
+  const handleSaveChanges = async () => {
+    try {
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_URL}/documentos/update-documento/${selectedDocumentoId}`,
+        prepareFormData()
+      );
+
+      if (response.data.success) {
+        const changes = Object.entries(formData)
+          .filter(([key, value]) => value !== originalData[key])
+          .map(([key, value]) => `<p><b>${key}:</b> ${originalData[key]} → ${value}</p>`)
+          .join('');
+
+        Swal.fire({
+          title: 'Confirmar Cambios',
+          html: changes.length > 0 ? changes : '<p>No hay cambios realizados.</p>',
+          icon: 'info',
+          showCancelButton: true,
+          confirmButtonText: 'Guardar',
+          cancelButtonText: 'Cancelar',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Cambios guardados',
+              text: 'El documento se ha actualizado exitosamente.',
+            });
+
+            // Actualizar la lista
+            setDocumentos((prev) =>
+              prev.map((documento) =>
+                documento.id_documento === selectedDocumentoId
+                  ? { ...documento, ...formData }
+                  : documento
+              )
+            );
+
+            // Resetear formulario
+            setFormData({
+              factura_documento: '',
+              fecha_documento: '',
+              estatus_legal: '',
+              documento_ampare_propiedad: '',
+              comentarios: '',
+              id_bien: '',
+            });
+            setEditMode(false);
+            setSelectedDocumentoId(null);
+          }
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudieron guardar los cambios.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: error.message || 'Error desconocido.',
+      });
+    }
+  };
+
   return (
     <div className={styles.agregarDocumentoContainer}>
       <main className={`${styles.agregarDocumentoMainContent} ${styles.fadeIn}`}>
-        <h2 className={styles.agregarDocumentoTitle}>Agregar Documento</h2>
+        <h2 className={styles.agregarDocumentoTitle}>
+          {editMode ? 'Editar Documento' : 'Agregar Documento'}
+        </h2>
         <div className={styles.agregarDocumentoFormContainer}>
           <div className={styles.agregarDocumentoFormRow}>
             <input
@@ -154,7 +269,7 @@ function AgregarDocumento() {
                 Comprobante Fiscal Digital por Internet
               </option>
               <option value="Contrato de Comodato">Contrato de Comodato</option>
-              <option value="Contrato de Donación">Contrato de Donación</option>
+              <option value="Contrato de               Donación">Contrato de Donación</option>
               <option value="Resguardo Oficial de Asignación">
                 Resguardo Oficial de Asignación
               </option>
@@ -189,15 +304,23 @@ function AgregarDocumento() {
           >
             Atrás
           </button>
-          <button
-            className={styles.agregarDocumentoAddButton}
-            onClick={handleAddDocumento}
-          >
-            Agregar
-          </button>
+          {editMode ? (
+            <button
+              className={styles.agregarDocumentoSaveButton}
+              onClick={handleSaveChanges}
+            >
+              Guardar Cambios
+            </button>
+          ) : (
+            <button
+              className={styles.agregarDocumentoAddButton}
+              onClick={handleAddDocumento}
+            >
+              Agregar
+            </button>
+          )}
         </div>
 
-        {/* Tabla de documentos */}
         {isLoading ? (
           <div className={styles.spinnerContainer}>
             <TailSpin height="80" width="80" color="red" ariaLabel="loading" />
@@ -232,16 +355,18 @@ function AgregarDocumento() {
                       <div className={styles.buttonGroup}>
                         <button
                           className={`${styles.actionButton} ${styles.editButton}`}
-                          onClick={() =>
-                            console.log(`Editar documento ${documento.id_documento}`)
-                          }
+                          onClick={() => handleEditDocumento(documento.id_documento)}
                         >
                           <span className="material-icons">edit</span>
                         </button>
                         <button
                           className={`${styles.actionButton} ${styles.deleteButton}`}
                           onClick={() =>
-                            console.log(`Eliminar documento ${documento.id_documento}`)
+                            Swal.fire({
+                              icon: 'error',
+                              title: 'Función no implementada',
+                              text: 'Eliminar documento aún no está disponible.',
+                            })
                           }
                         >
                           <span className="material-icons">delete</span>

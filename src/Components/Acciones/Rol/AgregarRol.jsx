@@ -9,8 +9,10 @@ const AgregarRol = () => {
   const navigate = useNavigate();
   const [roles, setRoles] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [editingRol, setEditingRol] = useState(null); // Estado para modo edición
+  const [originalData, setOriginalData] = useState({}); // Almacena los datos originales del rol editado
 
-  // Estado para los valores del formulario
+  // Estado del formulario
   const [formData, setFormData] = useState({
     nombre_rol: '',
     descripcion_rol: '',
@@ -44,7 +46,7 @@ const AgregarRol = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  // Función para enviar los datos del formulario
+  // Función para enviar los datos del formulario (Agregar Rol)
   const handleAddRol = async () => {
     try {
       const response = await axios.post(
@@ -79,7 +81,94 @@ const AgregarRol = () => {
     }
   };
 
-  // Función para eliminar un área con confirmación
+  // Función para cargar datos de rol en formulario para edición
+  const handleEditRol = async (id) => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/rol/get-rol/${id}`
+      );
+      if (response.data.success) {
+        const rol = response.data.data;
+        setFormData({
+          nombre_rol: rol.nombre_rol,
+          descripcion_rol: rol.descripcion_rol,
+        });
+        setOriginalData({
+          nombre_rol: rol.nombre_rol,
+          descripcion_rol: rol.descripcion_rol,
+        }); // Guarda los datos originales
+        setEditingRol(id);
+      } else {
+        console.error('Error al cargar rol:', response.data.message);
+      }
+    } catch (error) {
+      console.error('Error al cargar rol:', error);
+    }
+  };
+
+  // Función para guardar cambios de un rol editado
+  const handleSaveChanges = async () => {
+    try {
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_URL}/rol/update-rol/${editingRol}`,
+        formData
+      );
+
+      if (response.data.success) {
+        const changes = Object.entries(formData)
+          .filter(([key, value]) => value !== originalData[key])
+          .map(([key, value]) => `<p><b>${key}:</b> ${originalData[key]} → ${value}</p>`)
+          .join('');
+
+        Swal.fire({
+          title: 'Confirmar Cambios',
+          html: changes.length > 0 ? changes : '<p>No hay cambios realizados.</p>',
+          icon: 'info',
+          showCancelButton: true,
+          confirmButtonText: 'Guardar',
+          cancelButtonText: 'Cancelar',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Cambios guardados',
+              text: 'El rol se actualizó exitosamente.',
+            });
+
+            // Actualiza la lista de roles
+            setRoles((prev) =>
+              prev.map((rol) =>
+                rol.id_rol === editingRol
+                  ? { ...rol, ...formData }
+                  : rol
+              )
+            );
+
+            // Restablecer el formulario
+            setFormData({
+              nombre_rol: '',
+              descripcion_rol: '',
+            });
+            setEditingRol(null);
+          }
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudieron guardar los cambios.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: error.message || 'Error desconocido.',
+      });
+    }
+  };
+
+  // Función para eliminar un rol con confirmación
   const handleDeleteRol = async (id) => {
     Swal.fire({
       title: '¿Está seguro?',
@@ -98,13 +187,13 @@ const AgregarRol = () => {
           if (response.data.success) {
             Swal.fire({
               icon: 'success',
-              title: 'Rol eliminada',
+              title: 'Rol eliminado',
               text: 'El rol se ha eliminado exitosamente.',
               timer: 2000,
               showConfirmButton: false,
             });
 
-            // Actualizar la lista de áreas
+            // Actualizar la lista de roles
             setRoles(roles.filter((rol) => rol.id_rol !== id));
           } else {
             Swal.fire({
@@ -117,7 +206,7 @@ const AgregarRol = () => {
           Swal.fire({
             icon: 'error',
             title: 'Error en el servidor',
-            text: 'Ocurrió un error al intentar eliminar el rol.',
+            text: error.message || 'Ocurrió un error al intentar eliminar el rol.',
           });
         }
       }
@@ -127,7 +216,9 @@ const AgregarRol = () => {
   return (
     <div className={styles.agregarRolContainer}>
       <main className={`${styles.agregarRolMainContent} ${styles.fadeIn}`}>
-        <h2 className={styles.agregarRolTitle}>Agregar Rol</h2>
+        <h2 className={styles.agregarRolTitle}>
+          {editingRol ? 'Editar Rol' : 'Agregar Rol'}
+        </h2>
         <div className={styles.agregarRolFormContainer}>
           <div className={styles.agregarRolFormRow}>
             <input
@@ -155,12 +246,21 @@ const AgregarRol = () => {
           >
             Atrás
           </button>
-          <button
-            className={styles.agregarRolAddButton}
-            onClick={handleAddRol}
-          >
-            Agregar
-          </button>
+          {editingRol ? (
+            <button
+              className={styles.agregarRolAddButton}
+              onClick={handleSaveChanges}
+            >
+              Guardar Cambios
+            </button>
+          ) : (
+            <button
+              className={styles.agregarRolAddButton}
+              onClick={handleAddRol}
+            >
+              Agregar
+            </button>
+          )}
         </div>
 
         {/* Spinner o tabla de roles */}
@@ -177,7 +277,7 @@ const AgregarRol = () => {
                   <th>ID</th>
                   <th>Nombre</th>
                   <th>Descripción</th>
-                  <th>Opciones</th> {/* Columna para botones */}
+                  <th>Opciones</th>
                 </tr>
               </thead>
               <tbody>
@@ -190,7 +290,7 @@ const AgregarRol = () => {
                       <div className={styles.buttonGroup}>
                         <button
                           className={`${styles.actionButton} ${styles.editButton}`}
-                          onClick={() => console.log(`Editar rol ${rol.id_rol}`)}
+                          onClick={() => handleEditRol(rol.id_rol)}
                         >
                           <span className="material-icons">edit</span>
                         </button>

@@ -10,6 +10,8 @@ const AgregarDireccion = () => {
   const [direcciones, setDirecciones] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [nombreDireccion, setNombreDireccion] = useState('');
+  const [editingDireccion, setEditingDireccion] = useState(null);
+  const [originalData, setOriginalData] = useState({}); // Almacena los datos originales de la dirección editada
 
   // Petición a la API para obtener las direcciones
   useEffect(() => {
@@ -30,7 +32,7 @@ const AgregarDireccion = () => {
     fetchDirecciones();
   }, []);
 
-  // Función para manejar el envío del formulario
+  // Función para manejar el envío del formulario (Agregar Dirección)
   const handleAddDireccion = async () => {
     if (!nombreDireccion.trim()) {
       Swal.fire({
@@ -42,7 +44,7 @@ const AgregarDireccion = () => {
     }
 
     try {
-      const response = await axios.post('http://localhost:3100/api/direccion/create-direccion', {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/direccion/create-direccion`, {
         nombre_direccion: nombreDireccion,
       });
 
@@ -69,16 +71,105 @@ const AgregarDireccion = () => {
       Swal.fire({
         icon: 'error',
         title: 'Error en el servidor',
-        text: 'Ocurrió un error al intentar agregar la dirección. Por favor, intente nuevamente.',
+        text: error.message || 'Ocurrió un error al intentar agregar la dirección. Por favor, intente nuevamente.',
       });
     }
   };
 
-  // Función para eliminar una direccion con confirmación
+  // Función para cargar datos de dirección en formulario para edición
+  const handleEditDireccion = async (id) => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/direccion/get-direccion/${id}`
+      );
+      if (response.data.success) {
+        const direccion = response.data.data;
+        setNombreDireccion(direccion.nombre_direccion);
+        setOriginalData({ nombre_direccion: direccion.nombre_direccion }); // Guarda los datos originales
+        setEditingDireccion(id);
+      } else {
+        console.error('Error al cargar dirección:', response.data.message);
+      }
+    } catch (error) {
+      console.error('Error al cargar dirección:', error);
+    }
+  };
+
+  // Función para guardar cambios de una dirección editada
+  const handleSaveChanges = async () => {
+    if (!nombreDireccion.trim()) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Campos incompletos',
+        text: 'Por favor, ingrese un nombre para la dirección.',
+      });
+      return;
+    }
+
+    try {
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_URL}/direccion/update-direccion/${editingDireccion}`,
+        {
+          nombre_direccion: nombreDireccion,
+        }
+      );
+
+      if (response.data.success) {
+        const changes = Object.entries({ nombre_direccion: nombreDireccion })
+          .filter(([key, value]) => value !== originalData[key])
+          .map(([key, value]) => `<p><b>${key}:</b> ${originalData[key]} → ${value}</p>`)
+          .join('');
+
+        Swal.fire({
+          title: 'Confirmar Cambios',
+          html: changes.length > 0 ? changes : '<p>No hay cambios realizados.</p>',
+          icon: 'info',
+          showCancelButton: true,
+          confirmButtonText: 'Guardar',
+          cancelButtonText: 'Cancelar',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Cambios guardados',
+              text: 'La dirección se actualizó exitosamente.',
+            });
+
+            // Actualiza la lista de direcciones
+            setDirecciones((prev) =>
+              prev.map((direccion) =>
+                direccion.id_direccion === editingDireccion
+                  ? { ...direccion, nombre_direccion: nombreDireccion }
+                  : direccion
+              )
+            );
+
+            // Restablecer el formulario
+            setNombreDireccion('');
+            setEditingDireccion(null);
+          }
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudieron guardar los cambios.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: error.message || 'Ocurrió un error al intentar guardar los cambios.',
+      });
+    }
+  };
+
+  // Función para eliminar una dirección con confirmación
   const handleDeleteDireccion = async (id) => {
     Swal.fire({
       title: '¿Está seguro?',
-      text: 'Esta acción eliminará el direccion permanentemente.',
+      text: 'Esta acción eliminará la dirección permanentemente.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Sí, eliminar',
@@ -93,26 +184,26 @@ const AgregarDireccion = () => {
           if (response.data.success) {
             Swal.fire({
               icon: 'success',
-              title: 'Direccion eliminada',
-              text: 'La direccion se ha eliminado exitosamente.',
+              title: 'Dirección eliminada',
+              text: 'La dirección se ha eliminado exitosamente.',
               timer: 2000,
               showConfirmButton: false,
             });
 
-            // Actualizar la lista de áreas
+            // Actualizar la lista de direcciones
             setDirecciones(direcciones.filter((direccion) => direccion.id_direccion !== id));
           } else {
             Swal.fire({
               icon: 'error',
               title: 'Error',
-              text: response.data.message || 'No se pudo eliminar la direccion.',
+              text: response.data.message || 'No se pudo eliminar la dirección.',
             });
           }
         } catch (error) {
           Swal.fire({
             icon: 'error',
             title: 'Error en el servidor',
-            text: 'Ocurrió un error al intentar eliminar la doreccion.',
+            text: error.message || 'Ocurrió un error al intentar eliminar la dirección.',
           });
         }
       }
@@ -122,7 +213,9 @@ const AgregarDireccion = () => {
   return (
     <div className={styles.agregarDireccionContainer}>
       <main className={`${styles.agregarDireccionMainContent} ${styles.fadeIn}`}>
-        <h2 className={styles.agregarDireccionTitle}>Agregar Dirección</h2>
+        <h2 className={styles.agregarDireccionTitle}>
+          {editingDireccion ? 'Editar Dirección' : 'Agregar Dirección'}
+        </h2>
         <div className={styles.agregarDireccionFormContainer}>
           <div className={styles.agregarDireccionFormRow}>
             <input
@@ -135,12 +228,27 @@ const AgregarDireccion = () => {
           </div>
         </div>
         <div className={styles.agregarDireccionFormActions}>
-          <button className={styles.agregarDireccionBackButtonAction} onClick={() => navigate('/menu')}>
+          <button
+            className={styles.agregarDireccionBackButtonAction}
+            onClick={() => navigate('/menu')}
+          >
             Atrás
           </button>
-          <button className={styles.agregarDireccionAddButton} onClick={handleAddDireccion}>
-            Agregar
-          </button>
+          {editingDireccion ? (
+            <button
+              className={styles.agregarDireccionAddButton}
+              onClick={handleSaveChanges}
+            >
+              Guardar Cambios
+            </button>
+          ) : (
+            <button
+              className={styles.agregarDireccionAddButton}
+              onClick={handleAddDireccion}
+            >
+              Agregar
+            </button>
+          )}
         </div>
 
         {isLoading ? (
@@ -167,7 +275,7 @@ const AgregarDireccion = () => {
                       <div className={styles.buttonGroup}>
                         <button
                           className={`${styles.actionButton} ${styles.editButton}`}
-                          onClick={() => console.log(`Editar dirección ${direccion.id_direccion}`)}
+                          onClick={() => handleEditDireccion(direccion.id_direccion)}
                         >
                           <span className="material-icons">edit</span>
                         </button>

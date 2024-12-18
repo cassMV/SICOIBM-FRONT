@@ -15,6 +15,10 @@ function AgregarTipoPosesion() {
   const [clavePosesion, setClavePosesion] = useState('');
   const [statusPosesion, setStatusPosesion] = useState('');
 
+  // Estado para edición
+  const [editingId, setEditingId] = useState(null);
+  const [originalData, setOriginalData] = useState({});
+
   // Obtener posesiones desde la API
   useEffect(() => {
     const fetchPosesiones = async () => {
@@ -81,7 +85,7 @@ function AgregarTipoPosesion() {
   const handleDeleteTipoPosesion = async (id) => {
     Swal.fire({
       title: '¿Está seguro?',
-      text: 'Esta acción eliminará el tipo de posesion permanentemente.',
+      text: 'Esta acción eliminará el tipo de posesión permanentemente.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Sí, eliminar',
@@ -96,36 +100,133 @@ function AgregarTipoPosesion() {
           if (response.data.success) {
             Swal.fire({
               icon: 'success',
-              title: 'Tipo de posesion eliminada',
-              text: 'El tipo de posesion se ha eliminado exitosamente.',
+              title: 'Posesión eliminada',
+              text: 'El tipo de posesión se ha eliminado exitosamente.',
               timer: 2000,
               showConfirmButton: false,
             });
 
-            // Actualizar la lista de áreas
+            // Actualizar la lista de posesiones
             setPosesiones(posesiones.filter((posesion) => posesion.id_tipo_posesion !== id));
           } else {
             Swal.fire({
               icon: 'error',
               title: 'Error',
-              text: response.data.message || 'No se pudo eliminar el área.',
+              text: response.data.message || 'No se pudo eliminar la posesión.',
             });
           }
         } catch (error) {
           Swal.fire({
             icon: 'error',
             title: 'Error en el servidor',
-            text: 'Ocurrió un error al intentar eliminar el área.',
+            text: error.message || 'Error desconocido.',
           });
         }
       }
     });
   };
 
+  // Función para iniciar la edición de una posesión
+  const handleEditPosesion = async (id) => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/tipo-posesion/get-posesion/${id}`
+      );
+      if (response.data.success) {
+        const { descripcion_posesion, clave_posesion, status_posesion } = response.data.data;
+        setDescripcionPosesion(descripcion_posesion);
+        setClavePosesion(clave_posesion);
+        setStatusPosesion(status_posesion);
+        setEditingId(id);
+        setOriginalData(response.data.data);
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudo cargar la posesión.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: error.message || 'Error desconocido.',
+      });
+    }
+  };
+
+  // Función para guardar los cambios de la posesión
+  const handleSaveChanges = async () => {
+    try {
+      const body = {
+        descripcion_posesion: descripcionPosesion,
+        clave_posesion: clavePosesion,
+        status_posesion: statusPosesion,
+      };
+
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_URL}/tipo-posesion/update-posesion/${editingId}`,
+        body
+      );
+
+      if (response.data.success) {
+        const changes = Object.entries(body)
+          .filter(([key, value]) => value !== originalData[key])
+          .map(([key, value]) => `<b>${key}:</b> ${originalData[key]} → ${value}`)
+          .join('<br>');
+
+        Swal.fire({
+          title: 'Confirmar Cambios',
+          html: changes.length > 0 ? changes : '<p>No hay cambios realizados.</p>',
+          icon: 'info',
+          showCancelButton: true,
+          confirmButtonText: 'Guardar',
+          cancelButtonText: 'Cancelar',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Cambios guardados',
+              text: 'La posesión se ha actualizado exitosamente.',
+            });
+
+            // Actualizar la lista de posesiones
+            setPosesiones((prev) =>
+              prev.map((posesion) =>
+                posesion.id_tipo_posesion === editingId ? { ...posesion, ...body } : posesion
+              )
+            );
+
+            // Resetear el formulario
+            setDescripcionPosesion('');
+            setClavePosesion('');
+            setStatusPosesion('');
+            setEditingId(null);
+            setOriginalData({});
+          }
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudieron guardar los cambios.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: error.message || 'Error desconocido.',
+      });
+    }
+  };
+
   return (
     <div className={styles.agregarTipoPosesionContainer}>
       <main className={`${styles.agregarTipoPosesionMainContent} ${styles.fadeIn}`}>
-        <h2 className={styles.agregarTipoPosesionTitle}>Agregar Tipo de Posesión</h2>
+        <h2 className={styles.agregarTipoPosesionTitle}>
+          {editingId ? 'Editar Tipo de Posesión' : 'Agregar Tipo de Posesión'}
+        </h2>
         <div className={styles.agregarTipoPosesionFormContainer}>
           <div className={styles.agregarTipoPosesionFormRow}>
             <input
@@ -160,15 +261,23 @@ function AgregarTipoPosesion() {
           >
             Atrás
           </button>
-          <button
-            className={styles.agregarTipoPosesionAddButton}
-            onClick={handleAddPosesion}
-          >
-            Agregar
-          </button>
+          {editingId ? (
+            <button
+              className={styles.agregarTipoPosesionSaveButton}
+              onClick={handleSaveChanges}
+            >
+              Guardar Cambios
+            </button>
+          ) : (
+            <button
+              className={styles.agregarTipoPosesionAddButton}
+              onClick={handleAddPosesion}
+            >
+              Agregar
+            </button>
+          )}
         </div>
 
-        {/* Spinner o tabla de posesiones */}
         {isLoading ? (
           <div className={styles.spinnerContainer}>
             <TailSpin height="80" width="80" color="red" ariaLabel="loading" />
@@ -197,9 +306,7 @@ function AgregarTipoPosesion() {
                       <div className={styles.buttonGroup}>
                         <button
                           className={`${styles.actionButton} ${styles.editButton}`}
-                          onClick={() =>
-                            console.log(`Editar posesión ${posesion.id_tipo_posesion}`)
-                          }
+                          onClick={() => handleEditPosesion(posesion.id_tipo_posesion)}
                         >
                           <span className="material-icons">edit</span>
                         </button>

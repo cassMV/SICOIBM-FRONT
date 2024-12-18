@@ -9,6 +9,9 @@ function AgregarTipoAlta() {
   const navigate = useNavigate();
   const [tiposAlta, setTiposAlta] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false); // Modo edición
+  const [selectedTipoAltaId, setSelectedTipoAltaId] = useState(null); // ID del tipo de alta en edición
+  const [originalData, setOriginalData] = useState({}); // Datos originales del tipo de alta
 
   // Estado del formulario
   const [formData, setFormData] = useState({
@@ -75,7 +78,94 @@ function AgregarTipoAlta() {
     }
   };
 
-  // Función para eliminar un área con confirmación
+  // Cargar datos para edición
+  const handleEditTipoAlta = async (id) => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/tipo-alta/get-tipo-alta/${id}`
+      );
+      if (response.data.success) {
+        setFormData(response.data.data); // Rellenar el formulario
+        setOriginalData(response.data.data); // Guardar los datos originales
+        setEditMode(true);
+        setSelectedTipoAltaId(id);
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudo cargar el tipo de alta.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: error.message || 'Error desconocido.',
+      });
+    }
+  };
+
+  // Guardar cambios en el tipo de alta
+  const handleSaveChanges = async () => {
+    try {
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_URL}/tipo-alta/update-tipo-alta/${selectedTipoAltaId}`,
+        formData
+      );
+
+      if (response.data.success) {
+        const changes = Object.entries(formData)
+          .filter(([key, value]) => value !== originalData[key])
+          .map(([key, value]) => `<p><b>${key}:</b> ${originalData[key]} → ${value}</p>`)
+          .join('');
+
+        Swal.fire({
+          title: 'Confirmar Cambios',
+          html: changes.length > 0 ? changes : '<p>No hay cambios realizados.</p>',
+          icon: 'info',
+          showCancelButton: true,
+          confirmButtonText: 'Guardar',
+          cancelButtonText: 'Cancelar',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Cambios guardados',
+              text: 'El tipo de alta se ha actualizado exitosamente.',
+            });
+
+            // Actualizar la lista
+            setTiposAlta((prev) =>
+              prev.map((tipoAlta) =>
+                tipoAlta.id_tipo_alta === selectedTipoAltaId
+                  ? { ...tipoAlta, ...formData }
+                  : tipoAlta
+              )
+            );
+
+            // Resetear formulario
+            setFormData({ descripcion_alta: '' });
+            setEditMode(false);
+            setSelectedTipoAltaId(null);
+          }
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudieron guardar los cambios.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: error.message || 'Error desconocido.',
+      });
+    }
+  };
+
+  // Función para eliminar un tipo de alta con confirmación
   const handleDeleteTipoAlta = async (id) => {
     Swal.fire({
       title: '¿Está seguro?',
@@ -100,8 +190,10 @@ function AgregarTipoAlta() {
               showConfirmButton: false,
             });
 
-            // Actualizar la lista de áreas
-            setTiposAlta(tiposAlta.filter((tipoAlta) => tipoAlta.id_tipo_alta !== id));
+            // Actualizar la lista de tipos de alta
+            setTiposAlta((prev) =>
+              prev.filter((tipoAlta) => tipoAlta.id_tipo_alta !== id)
+            );
           } else {
             Swal.fire({
               icon: 'error',
@@ -113,7 +205,7 @@ function AgregarTipoAlta() {
           Swal.fire({
             icon: 'error',
             title: 'Error en el servidor',
-            text: 'Ocurrió un error al intentar eliminar el tipo de alta.',
+            text: error.message || 'Ocurrió un error al intentar eliminar el tipo de alta.',
           });
         }
       }
@@ -123,7 +215,9 @@ function AgregarTipoAlta() {
   return (
     <div className={styles.agregarTipoAltaContainer}>
       <main className={`${styles.agregarTipoAltaMainContent} ${styles.fadeIn}`}>
-        <h2 className={styles.agregarTipoAltaTitle}>Agregar Tipo de Alta</h2>
+        <h2 className={styles.agregarTipoAltaTitle}>
+          {editMode ? 'Editar Tipo de Alta' : 'Agregar Tipo de Alta'}
+        </h2>
         <div className={styles.agregarTipoAltaFormContainer}>
           <div className={styles.agregarTipoAltaFormRow}>
             <select
@@ -147,12 +241,21 @@ function AgregarTipoAlta() {
           >
             Atrás
           </button>
-          <button
-            className={styles.agregarTipoAltaAddButton}
-            onClick={handleAddTipoAlta}
-          >
-            Agregar
-          </button>
+          {editMode ? (
+            <button
+              className={styles.agregarTipoAltaSaveButton}
+              onClick={handleSaveChanges}
+            >
+              Guardar Cambios
+            </button>
+          ) : (
+            <button
+              className={styles.agregarTipoAltaAddButton}
+              onClick={handleAddTipoAlta}
+            >
+              Agregar
+            </button>
+          )}
         </div>
 
         {/* Spinner o tabla de tipos de alta */}
@@ -180,9 +283,7 @@ function AgregarTipoAlta() {
                       <div className={styles.buttonGroup}>
                         <button
                           className={`${styles.actionButton} ${styles.editButton}`}
-                          onClick={() =>
-                            console.log(`Editar tipo de alta ${tipoAlta.id_tipo_alta}`)
-                          }
+                          onClick={() => handleEditTipoAlta(tipoAlta.id_tipo_alta)}
                         >
                           <span className="material-icons">edit</span>
                         </button>

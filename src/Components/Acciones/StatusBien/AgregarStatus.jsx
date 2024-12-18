@@ -9,6 +9,8 @@ const AgregarStatus = () => {
   const navigate = useNavigate();
   const [statusBien, setStatusBien] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [editingStatus, setEditingStatus] = useState(null); // Estado para modo edición
+  const [originalData, setOriginalData] = useState({}); // Almacena los datos originales del status editado
 
   // Estado para los valores del formulario
   const [formData, setFormData] = useState({
@@ -43,7 +45,7 @@ const AgregarStatus = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  // Función para enviar los datos del formulario
+  // Función para enviar los datos del formulario (Agregar Status)
   const handleAddStatus = async () => {
     try {
       const response = await axios.post(
@@ -64,6 +66,84 @@ const AgregarStatus = () => {
           icon: 'error',
           title: 'Error',
           text: response.data.message || 'No se pudo agregar el status.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: error.message || 'Error desconocido.',
+      });
+    }
+  };
+
+  // Función para cargar datos de status en formulario para edición
+  const handleEditStatus = async (id) => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/status-bien/get-status-bien/${id}`
+      );
+      if (response.data.success) {
+        const status = response.data.data;
+        setFormData({ descripcion_status: status.descripcion_status });
+        setOriginalData({ descripcion_status: status.descripcion_status }); // Guarda los datos originales
+        setEditingStatus(id);
+      } else {
+        console.error('Error al cargar el status:', response.data.message);
+      }
+    } catch (error) {
+      console.error('Error al cargar el status:', error);
+    }
+  };
+
+  // Función para guardar cambios de un status editado
+  const handleSaveChanges = async () => {
+    try {
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_URL}/status-bien/update-status-bien/${editingStatus}`,
+        formData
+      );
+
+      if (response.data.success) {
+        const changes = Object.entries(formData)
+          .filter(([key, value]) => value !== originalData[key])
+          .map(([key, value]) => `<p><b>${key}:</b> ${originalData[key]} → ${value}</p>`)
+          .join('');
+
+        Swal.fire({
+          title: 'Confirmar Cambios',
+          html: changes.length > 0 ? changes : '<p>No hay cambios realizados.</p>',
+          icon: 'info',
+          showCancelButton: true,
+          confirmButtonText: 'Guardar',
+          cancelButtonText: 'Cancelar',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Cambios guardados',
+              text: 'El status se actualizó exitosamente.',
+            });
+
+            // Actualiza la lista de status
+            setStatusBien((prev) =>
+              prev.map((status) =>
+                status.id_status_bien === editingStatus
+                  ? { ...status, descripcion_status: formData.descripcion_status }
+                  : status
+              )
+            );
+
+            // Restablecer el formulario
+            setFormData({ descripcion_status: '' });
+            setEditingStatus(null);
+          }
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudieron guardar los cambios.',
         });
       }
     } catch (error) {
@@ -100,20 +180,20 @@ const AgregarStatus = () => {
               showConfirmButton: false,
             });
 
-            // Actualizar la lista de áreas
+            // Actualizar la lista de status
             setStatusBien(statusBien.filter((status) => status.id_status_bien !== id));
           } else {
             Swal.fire({
               icon: 'error',
               title: 'Error',
-              text: response.data.message || 'No se pudo eliminar el área.',
+              text: response.data.message || 'No se pudo eliminar el status.',
             });
           }
         } catch (error) {
           Swal.fire({
             icon: 'error',
             title: 'Error en el servidor',
-            text: 'Ocurrió un error al intentar eliminar el área.',
+            text: error.message || 'Ocurrió un error al intentar eliminar el status.',
           });
         }
       }
@@ -123,7 +203,9 @@ const AgregarStatus = () => {
   return (
     <div className={styles.agregarStatusContainer}>
       <main className={`${styles.agregarStatusMainContent} ${styles.fadeIn}`}>
-        <h2 className={styles.agregarStatusTitle}>Agregar Status del Bien</h2>
+        <h2 className={styles.agregarStatusTitle}>
+          {editingStatus ? 'Editar Status del Bien' : 'Agregar Status del Bien'}
+        </h2>
         <div className={styles.agregarStatusFormContainer}>
           <div className={styles.agregarStatusFormRow}>
             <select
@@ -147,12 +229,21 @@ const AgregarStatus = () => {
           >
             Atrás
           </button>
-          <button
-            className={styles.agregarStatusAddButton}
-            onClick={handleAddStatus}
-          >
-            Agregar
-          </button>
+          {editingStatus ? (
+            <button
+              className={styles.agregarStatusAddButton}
+              onClick={handleSaveChanges}
+            >
+              Guardar Cambios
+            </button>
+          ) : (
+            <button
+              className={styles.agregarStatusAddButton}
+              onClick={handleAddStatus}
+            >
+              Agregar
+            </button>
+          )}
         </div>
 
         {/* Spinner o tabla de estados */}
@@ -180,7 +271,7 @@ const AgregarStatus = () => {
                       <div className={styles.buttonGroup}>
                         <button
                           className={`${styles.actionButton} ${styles.editButton}`}
-                          onClick={() => console.log(`Editar estado ${status.id_status_bien}`)}
+                          onClick={() => handleEditStatus(status.id_status_bien)}
                         >
                           <span className="material-icons">edit</span>
                         </button>

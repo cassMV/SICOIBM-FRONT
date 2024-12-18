@@ -11,6 +11,10 @@ const AgregarArea = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [nombreArea, setNombreArea] = useState('');
 
+  // Estado para edición
+  const [editingId, setEditingId] = useState(null);
+  const [originalData, setOriginalData] = useState({});
+
   // Petición a la API para obtener las áreas
   useEffect(() => {
     const fetchAreas = async () => {
@@ -69,7 +73,7 @@ const AgregarArea = () => {
       Swal.fire({
         icon: 'error',
         title: 'Error en el servidor',
-        text: 'Ocurrió un error al intentar agregar el área.',
+        text: error.message || 'Ocurrió un error al intentar agregar el área.',
       });
     }
   };
@@ -112,17 +116,107 @@ const AgregarArea = () => {
           Swal.fire({
             icon: 'error',
             title: 'Error en el servidor',
-            text: 'Ocurrió un error al intentar eliminar el área.',
+            text: error.message || 'Ocurrió un error al intentar eliminar el área.',
           });
         }
       }
     });
   };
 
+  // Función para iniciar la edición de un área
+  const handleEditArea = async (id) => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/area/get-area/${id}`
+      );
+      if (response.data.success) {
+        setNombreArea(response.data.data.nombre_area);
+        setEditingId(id);
+        setOriginalData(response.data.data);
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudo cargar el área.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: error.message || 'Error desconocido.',
+      });
+    }
+  };
+
+  // Función para guardar los cambios de un área
+  const handleSaveChanges = async () => {
+    try {
+      const body = {
+        nombre_area: nombreArea,
+      };
+
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_URL}/area/update-area/${editingId}`,
+        body
+      );
+
+      if (response.data.success) {
+        const changes = Object.entries(body)
+          .filter(([key, value]) => value !== originalData[key])
+          .map(([key, value]) => `<b>${key}:</b> ${originalData[key]} → ${value}`)
+          .join('<br>');
+
+        Swal.fire({
+          title: 'Confirmar Cambios',
+          html: changes.length > 0 ? changes : '<p>No hay cambios realizados.</p>',
+          icon: 'info',
+          showCancelButton: true,
+          confirmButtonText: 'Guardar',
+          cancelButtonText: 'Cancelar',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Cambios guardados',
+              text: 'El área se ha actualizado exitosamente.',
+            });
+
+            // Actualizar la lista de áreas
+            setAreas((prev) =>
+              prev.map((area) =>
+                area.id_area === editingId ? { ...area, ...body } : area
+              )
+            );
+
+            // Resetear el formulario
+            setNombreArea('');
+            setEditingId(null);
+            setOriginalData({});
+          }
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudieron guardar los cambios.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: error.message || 'Error desconocido.',
+      });
+    }
+  };
+
   return (
     <div className={styles.agregarAreaContainer}>
       <main className={`${styles.agregarAreaMainContent} ${styles.fadeIn}`}>
-        <h2 className={styles.agregarAreaTitle}>Agregar Área</h2>
+        <h2 className={styles.agregarAreaTitle}>
+          {editingId ? 'Editar Área' : 'Agregar Área'}
+        </h2>
         <div className={styles.agregarAreaFormContainer}>
           <div className={styles.agregarAreaFormRow}>
             <input
@@ -138,9 +232,15 @@ const AgregarArea = () => {
           <button className={styles.agregarAreaBackButtonAction} onClick={() => navigate('/menu')}>
             Atrás
           </button>
-          <button className={styles.agregarAreaAddButton} onClick={handleAddArea}>
-            Agregar
-          </button>
+          {editingId ? (
+            <button className={styles.agregarAreaSaveButton} onClick={handleSaveChanges}>
+              Guardar Cambios
+            </button>
+          ) : (
+            <button className={styles.agregarAreaAddButton} onClick={handleAddArea}>
+              Agregar
+            </button>
+          )}
         </div>
 
         {isLoading ? (
@@ -167,7 +267,7 @@ const AgregarArea = () => {
                       <div className={styles.buttonGroup}>
                         <button
                           className={`${styles.actionButton} ${styles.editButton}`}
-                          onClick={() => console.log(`Editar área ${area.id_area}`)}
+                          onClick={() => handleEditArea(area.id_area)}
                         >
                           <span className="material-icons">edit</span>
                         </button>

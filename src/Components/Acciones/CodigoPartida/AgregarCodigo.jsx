@@ -10,6 +10,8 @@ function AgregarCodigo() {
   const [partidas, setPartidas] = useState([]);
   const [subcuentas, setSubcuentas] = useState([]); // Estado para subcuentas
   const [isLoading, setIsLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false); // Modo edición
+  const [selectedPartidaId, setSelectedPartidaId] = useState(null); // ID de la partida en edición
 
   // Estado del formulario
   const [formData, setFormData] = useState({
@@ -109,6 +111,115 @@ function AgregarCodigo() {
     }
   };
 
+  // Función para cargar los datos de una partida en el formulario para edición
+  const handleEditPartida = async (id) => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/codigo-partida-especifica/get-partida/${id}`
+      );
+      if (response.data.success) {
+        const partida = response.data.data;
+        setFormData({
+          codigo_partida: partida.codigo_partida,
+          nombre_partida: partida.nombre_partida,
+          borrador_partida: partida.borrador_partida,
+          status_partida: partida.status_partida,
+          id_subcuenta: partida.id_subcuenta,
+        });
+        setEditMode(true);
+        setSelectedPartidaId(id);
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudo cargar la partida.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: error.message || 'Error desconocido.',
+      });
+    }
+  };
+
+  // Función para guardar los cambios de una partida editada
+  const handleSaveChanges = async () => {
+    try {
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_URL}/codigo-partida-especifica/update-partida/${selectedPartidaId}`,
+        formData
+      );
+
+      if (response.data.success) {
+        // Filtrar solo los cambios realizados
+        const originalPartida = partidas.find(
+          (partida) => partida.id_partida === selectedPartidaId
+        );
+        const cambios = Object.entries(formData)
+          .filter(([key, value]) => originalPartida[key] !== value)
+          .map(([key, value]) => {
+            const displayValue =
+              key === 'id_subcuenta'
+                ? subcuentas.find((s) => s.id_subcuenta === value)?.nombre_subcuenta || value
+                : value;
+            return `<p><b>${key}:</b> ${originalPartida[key]} → ${displayValue}</p>`;
+          })
+          .join('');
+
+        Swal.fire({
+          title: 'Confirmar Cambios',
+          html: cambios,
+          icon: 'info',
+          showCancelButton: true,
+          confirmButtonText: 'Guardar',
+          cancelButtonText: 'Cancelar',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Cambios guardados',
+              text: 'La partida se ha actualizado exitosamente.',
+            });
+
+            // Actualizar la lista de partidas
+            setPartidas((prev) =>
+              prev.map((partida) =>
+                partida.id_partida === selectedPartidaId
+                  ? { ...partida, ...formData }
+                  : partida
+              )
+            );
+
+            // Resetear formulario
+            setFormData({
+              codigo_partida: '',
+              nombre_partida: '',
+              borrador_partida: false,
+              status_partida: '',
+              id_subcuenta: '',
+            });
+            setEditMode(false);
+            setSelectedPartidaId(null);
+          }
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudieron guardar los cambios.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: error.message || 'Error desconocido.',
+      });
+    }
+  };
+
   // Función para eliminar un codigo con confirmación
   const handleDeleteCodigo = async (id) => {
     Swal.fire({
@@ -140,25 +251,26 @@ function AgregarCodigo() {
             Swal.fire({
               icon: 'error',
               title: 'Error',
-              text: response.data.message || 'No se pudo eliminar el Codigo de partida.',
+              text: response.data.message || '            No se pudo eliminar el Codigo de partida.',
             });
           }
         } catch (error) {
           Swal.fire({
             icon: 'error',
             title: 'Error en el servidor',
-            text: 'Ocurrió un error al intentar eliminar el codigo de partida.',
+            text: error.message || 'Ocurrió un error al intentar eliminar el codigo de partida.',
           });
         }
       }
     });
   };
 
-
   return (
     <div className={styles.agregarCodigoContainer}>
       <main className={`${styles.agregarCodigoMainContent} ${styles.fadeIn}`}>
-        <h2 className={styles.agregarCodigoTitle}>Agregar Código de Partida Específica</h2>
+        <h2 className={styles.agregarCodigoTitle}>
+          {editMode ? 'Editar Código de Partida Específica' : 'Agregar Código de Partida Específica'}
+        </h2>
         <div className={styles.agregarCodigoFormContainer}>
           <div className={styles.agregarBajaBienFormRow}>
             <input
@@ -219,12 +331,21 @@ function AgregarCodigo() {
           >
             Atrás
           </button>
-          <button
-            className={styles.agregarCodigoAddButton}
-            onClick={handleAddPartida}
-          >
-            Agregar
-          </button>
+          {editMode ? (
+            <button
+              className={styles.agregarCodigoSaveButton}
+              onClick={handleSaveChanges}
+            >
+              Guardar Cambios
+            </button>
+          ) : (
+            <button
+              className={styles.agregarCodigoAddButton}
+              onClick={handleAddPartida}
+            >
+              Agregar
+            </button>
+          )}
         </div>
 
         {/* Spinner o tabla de partidas */}
@@ -255,12 +376,12 @@ function AgregarCodigo() {
                     <td>{partida.nombre_partida}</td>
                     <td>{partida.borrador_partida ? 'Sí' : 'No'}</td>
                     <td>{partida.status_partida}</td>
-                    <td>{partida.id_subcuenta || 'N/A'}</td>
+                    <td>{subcuentas.find((s) => s.id_subcuenta === partida.id_subcuenta)?.nombre_subcuenta || 'N/A'}</td>
                     <td>
                       <div className={styles.buttonGroup}>
                         <button
                           className={`${styles.actionButton} ${styles.editButton}`}
-                          onClick={() => console.log(`Editar partida ${partida.id_partida}`)}
+                          onClick={() => handleEditPartida(partida.id_partida)}
                         >
                           <span className="material-icons">edit</span>
                         </button>

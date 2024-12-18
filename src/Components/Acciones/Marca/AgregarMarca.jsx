@@ -9,6 +9,9 @@ function AgregarMarca() {
   const navigate = useNavigate();
   const [marcas, setMarcas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [editMode, setEditMode] = useState(false); // Modo edición
+  const [selectedMarcaId, setSelectedMarcaId] = useState(null); // ID de la marca a editar
+  const [originalData, setOriginalData] = useState({}); // Datos originales de la marca
 
   // Estado del formulario
   const [formData, setFormData] = useState({
@@ -44,7 +47,7 @@ function AgregarMarca() {
     setFormData({ ...formData, [name]: value });
   };
 
-  // Función para enviar los datos del formulario
+  // Agregar nueva marca
   const handleAddMarca = async () => {
     try {
       const response = await axios.post(
@@ -79,55 +82,108 @@ function AgregarMarca() {
     }
   };
 
-  // Función para eliminar un marca con confirmación
-  const handleDeleteMarca = async (id) => {
-    Swal.fire({
-      title: '¿Está seguro?',
-      text: 'Esta acción eliminará la marca permanentemente.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          const response = await axios.delete(
-            `${import.meta.env.VITE_API_URL}/marca/delete-marca/${id}`
-          );
+  // Manejar edición de marca
+  const handleEditMarca = async (id) => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/marca/get-marca/${id}`
+      );
+      if (response.data.success) {
+        const marca = response.data.data;
+        setFormData({
+          nombre_marca: marca.nombre_marca,
+          status_marca: marca.status_marca,
+        });
+        setOriginalData(marca); // Guardar datos originales
+        setEditMode(true);
+        setSelectedMarcaId(id);
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudo cargar la marca.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: error.message || 'Error desconocido.',
+      });
+    }
+  };
 
-          if (response.data.success) {
+  // Guardar cambios en una marca editada
+  const handleSaveChanges = async () => {
+    try {
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_URL}/marca/update-marca/${selectedMarcaId}`,
+        formData
+      );
+
+      if (response.data.success) {
+        const changes = Object.entries(formData)
+          .filter(([key, value]) => value !== originalData[key])
+          .map(([key, value]) => {
+            return `<p><b>${key}:</b> ${originalData[key]} → ${value}</p>`;
+          })
+          .join('');
+
+        Swal.fire({
+          title: 'Confirmar Cambios',
+          html: changes.length > 0 ? changes : '<p>No hay cambios realizados.</p>',
+          icon: 'info',
+          showCancelButton: true,
+          confirmButtonText: 'Guardar',
+          cancelButtonText: 'Cancelar',
+        }).then((result) => {
+          if (result.isConfirmed) {
             Swal.fire({
               icon: 'success',
-              title: 'Marca eliminada',
-              text: 'La marca se ha eliminado exitosamente.',
-              timer: 2000,
-              showConfirmButton: false,
+              title: 'Cambios guardados',
+              text: 'La marca se ha actualizado exitosamente.',
             });
 
-            // Actualizar la lista de áreas
-            setMarcas(marcas.filter((marca) => marca.id_marca !== id));
-          } else {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: response.data.message || 'No se pudo eliminar la marca.',
+            // Actualizar la lista de marcas
+            setMarcas((prev) =>
+              prev.map((marca) =>
+                marca.id_marca === selectedMarcaId
+                  ? { ...marca, ...formData }
+                  : marca
+              )
+            );
+
+            // Restablecer el formulario
+            setFormData({
+              nombre_marca: '',
+              status_marca: '',
             });
+            setEditMode(false);
+            setSelectedMarcaId(null);
           }
-        } catch (error) {
-          Swal.fire({
-            icon: 'error',
-            title: 'Error en el servidor',
-            text: 'Ocurrió un error al intentar eliminar la marca.',
-          });
-        }
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudieron guardar los cambios.',
+        });
       }
-    });
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: error.message || 'Error desconocido.',
+      });
+    }
   };
 
   return (
     <div className={styles.agregarMarcaContainer}>
       <main className={`${styles.agregarMarcaMainContent} ${styles.fadeIn}`}>
-        <h2 className={styles.agregarMarcaTitle}>Agregar Marca</h2>
+        <h2 className={styles.agregarMarcaTitle}>
+          {editMode ? 'Editar Marca' : 'Agregar Marca'}
+        </h2>
         <div className={styles.agregarMarcaFormContainer}>
           <div className={styles.agregarMarcaFormRow}>
             <input
@@ -157,12 +213,21 @@ function AgregarMarca() {
           >
             Atrás
           </button>
-          <button
-            className={styles.agregarMarcaAddButton}
-            onClick={handleAddMarca}
-          >
-            Agregar
-          </button>
+          {editMode ? (
+            <button
+              className={styles.agregarMarcaSaveButton}
+              onClick={handleSaveChanges}
+            >
+              Guardar Cambios
+            </button>
+          ) : (
+            <button
+              className={styles.agregarMarcaAddButton}
+              onClick={handleAddMarca}
+            >
+              Agregar
+            </button>
+          )}
         </div>
 
         {/* Spinner o tabla de marcas */}
@@ -192,13 +257,19 @@ function AgregarMarca() {
                       <div className={styles.buttonGroup}>
                         <button
                           className={`${styles.actionButton} ${styles.editButton}`}
-                          onClick={() => console.log(`Editar marca ${marca.id_marca}`)}
+                          onClick={() => handleEditMarca(marca.id_marca)}
                         >
                           <span className="material-icons">edit</span>
                         </button>
                         <button
                           className={`${styles.actionButton} ${styles.deleteButton}`}
-                          onClick={() => handleDeleteMarca(marca.id_marca)}
+                          onClick={() =>
+                            Swal.fire({
+                              icon: "info",
+                              title: "Función no implementada",
+                              text: "La eliminación de marcas aún no está disponible.",
+                            })
+                          }
                         >
                           <span className="material-icons">delete</span>
                         </button>

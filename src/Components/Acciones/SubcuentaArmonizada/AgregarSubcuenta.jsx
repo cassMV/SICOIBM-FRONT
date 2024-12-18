@@ -15,6 +15,10 @@ function AgregarSubcuenta() {
   const [statusSubcuenta, setStatusSubcuenta] = useState('');
   const [borradorSubcuenta, setBorradorSubcuenta] = useState('');
 
+  // Estado para edición
+  const [editingId, setEditingId] = useState(null);
+  const [originalData, setOriginalData] = useState({});
+
   // Obtener subcuentas desde la API
   useEffect(() => {
     const fetchSubcuentas = async () => {
@@ -115,17 +119,114 @@ function AgregarSubcuenta() {
           Swal.fire({
             icon: 'error',
             title: 'Error en el servidor',
-            text: 'Ocurrió un error al intentar eliminar la subcuenta.',
+            text: error.message || 'Ocurrió un error al intentar eliminar la subcuenta.',
           });
         }
       }
     });
   };
 
+  // Función para iniciar la edición de una subcuenta
+  const handleEditSubcuenta = async (id) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:3100/api/subcuenta-armonizada/get-subcuenta/${id}`
+      );
+      if (response.data.success) {
+        const { nombre_subcuenta, status_subcuenta, borrador_subcuenta } = response.data.data;
+        setNombreSubcuenta(nombre_subcuenta);
+        setStatusSubcuenta(status_subcuenta);
+        setBorradorSubcuenta(borrador_subcuenta ? 'Habilitado' : 'Inhabilitado');
+        setEditingId(id);
+        setOriginalData(response.data.data);
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudo cargar la subcuenta.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: error.message || 'Error desconocido.',
+      });
+    }
+  };
+
+  // Función para guardar los cambios de la subcuenta
+  const handleSaveChanges = async () => {
+    try {
+      const body = {
+        nombre_subcuenta: nombreSubcuenta,
+        status_subcuenta: statusSubcuenta,
+        borrador_subcuenta: borradorSubcuenta === 'Habilitado',
+      };
+
+      const response = await axios.put(
+        `http://localhost:3100/api/subcuenta-armonizada/update-subcuenta/${editingId}`,
+        body
+      );
+
+      if (response.data.success) {
+        const changes = Object.entries(body)
+          .filter(([key, value]) => value !== originalData[key])
+          .map(([key, value]) => `<b>${key}:</b> ${originalData[key]} → ${value}`)
+          .join('<br>');
+
+        Swal.fire({
+          title: 'Confirmar Cambios',
+          html: changes.length > 0 ? changes : '<p>No hay cambios realizados.</p>',
+          icon: 'info',
+          showCancelButton: true,
+          confirmButtonText: 'Guardar',
+          cancelButtonText: 'Cancelar',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Cambios guardados',
+              text: 'La subcuenta se ha actualizado exitosamente.',
+            });
+
+            // Actualizar la lista de subcuentas
+            setSubcuentas((prev) =>
+              prev.map((subcuenta) =>
+                subcuenta.id_subcuenta === editingId ? { ...subcuenta, ...body } : subcuenta
+              )
+            );
+
+            // Resetear el formulario
+            setNombreSubcuenta('');
+            setStatusSubcuenta('');
+            setBorradorSubcuenta('');
+            setEditingId(null);
+            setOriginalData({});
+          }
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudieron guardar los cambios.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: error.message || 'Error desconocido.',
+      });
+    }
+  };
+
   return (
     <div className={styles.agregarSubcuentaContainer}>
       <main className={`${styles.agregarSubcuentaMainContent} ${styles.fadeIn}`}>
-        <h2 className={styles.agregarSubcuentaTitle}>Agregar Subcuenta Armonizada</h2>
+        <h2 className={styles.agregarSubcuentaTitle}>
+          {editingId ? 'Editar Subcuenta Armonizada' : 'Agregar Subcuenta Armonizada'}
+        </h2>
         <div className={styles.agregarSubcuentaFormContainer}>
           <div className={styles.agregarSubcuentaFormRow}>
             <input
@@ -171,15 +272,23 @@ function AgregarSubcuenta() {
           >
             Atrás
           </button>
-          <button
-            className={styles.agregarSubcuentaAddButton}
-            onClick={handleAddSubcuenta}
-          >
-            Agregar
-          </button>
+          {editingId ? (
+            <button
+              className={styles.agregarSubcuentaSaveButton}
+              onClick={handleSaveChanges}
+            >
+              Guardar Cambios
+            </button>
+          ) : (
+            <button
+              className={styles.agregarSubcuentaAddButton}
+              onClick={handleAddSubcuenta}
+            >
+              Agregar
+            </button>
+          )}
         </div>
 
-        {/* Spinner o tabla de subcuentas */}
         {isLoading ? (
           <div className={styles.spinnerContainer}>
             <TailSpin height="80" width="80" color="red" ariaLabel="loading" />
@@ -208,9 +317,7 @@ function AgregarSubcuenta() {
                       <div className={styles.buttonGroup}>
                         <button
                           className={`${styles.actionButton} ${styles.editButton}`}
-                          onClick={() =>
-                            console.log(`Editar subcuenta ${subcuenta.id_subcuenta}`)
-                          }
+                          onClick={() => handleEditSubcuenta(subcuenta.id_subcuenta)}
                         >
                           <span className="material-icons">edit</span>
                         </button>

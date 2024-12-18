@@ -10,6 +10,8 @@ const AgregarProducto = () => {
   const [productos, setProductos] = useState([]);
   const [marcas, setMarcas] = useState([]); // Estado para las marcas
   const [isLoading, setIsLoading] = useState(true);
+  const [editingProducto, setEditingProducto] = useState(null); // Estado para modo edición
+  const [originalData, setOriginalData] = useState({}); // Almacena los datos originales del producto editado
 
   // Estado del formulario
   const [formData, setFormData] = useState({
@@ -71,7 +73,7 @@ const AgregarProducto = () => {
     });
   };
 
-  // Función para enviar los datos del formulario
+  // Función para enviar los datos del formulario (Agregar Producto)
   const handleAddProducto = async () => {
     try {
       const response = await axios.post(
@@ -109,6 +111,112 @@ const AgregarProducto = () => {
     }
   };
 
+  // Función para cargar datos de producto en formulario para edición
+  const handleEditProducto = async (id) => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/producto/get-producto/${id}`
+      );
+      if (response.data.success) {
+        const producto = response.data.data;
+        setFormData({
+          nombre_producto: producto.nombre_producto,
+          modelo: producto.modelo,
+          ruta_imagen: producto.ruta_imagen,
+          caracteristicas: producto.caracteristicas,
+          id_marca: producto.id_marca,
+        });
+        setOriginalData({
+          nombre_producto: producto.nombre_producto,
+          modelo: producto.modelo,
+          ruta_imagen: producto.ruta_imagen,
+          caracteristicas: producto.caracteristicas,
+          id_marca: producto.id_marca,
+        }); // Guarda los datos originales
+        setEditingProducto(id);
+      } else {
+        console.error("Error al cargar producto:", response.data.message);
+      }
+    } catch (error) {
+      console.error("Error al cargar producto:", error);
+    }
+  };
+
+  // Función para guardar cambios de un producto editado
+  const handleSaveChanges = async () => {
+    try {
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_URL}/producto/update-producto/${editingProducto}`,
+        formData
+      );
+
+      if (response.data.success) {
+        // Obtener nombre de la marca actualizada
+        const marcaResponse = await axios.get(
+          `${import.meta.env.VITE_API_URL}/marca/get-marca/${formData.id_marca}`
+        );
+        const nombreMarca = marcaResponse.data.data.nombre_marca;
+
+        const changes = Object.entries(formData)
+          .filter(([key, value]) => value !== originalData[key])
+          .map(([key, value]) => {
+            const displayValue =
+              key === "id_marca" ? `${originalData[key]} → ${nombreMarca}` : `${originalData[key]} → ${value}`;
+            return `<p><b>${key}:</b> ${displayValue}</p>`;
+          })
+          .join('');
+
+        Swal.fire({
+          title: "Confirmar Cambios",
+          html: changes.length > 0 ? changes : '<p>No hay cambios realizados.</p>',
+          icon: "info",
+          showCancelButton: true,
+          confirmButtonText: "Guardar",
+          cancelButtonText: "Cancelar",
+        }).then((result) => {
+          if (result.isConfirmed) {
+            Swal.fire({
+              icon: "success",
+              title: "Cambios guardados",
+              text: "El producto se actualizó exitosamente.",
+            });
+
+            // Actualiza la lista de productos
+            setProductos((prev) =>
+              prev.map((producto) =>
+                producto.id_producto === editingProducto
+                  ? { ...producto, ...formData }
+                  : producto
+              )
+            );
+
+            // Restablecer el formulario
+            setFormData({
+              nombre_producto: "",
+              modelo: "",
+              ruta_imagen: "",
+              caracteristicas: "",
+              id_marca: "",
+            });
+            setEditingProducto(null);
+          }
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: response.data.message || "No se pudieron guardar los cambios.",
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error en el servidor",
+        text: error.message || "Error desconocido.",
+      });
+    }
+  };
+
   // Función para eliminar un producto con confirmación
   const handleDeleteProducto = async (id) => {
     Swal.fire({
@@ -128,8 +236,8 @@ const AgregarProducto = () => {
           if (response.data.success) {
             Swal.fire({
               icon: 'success',
-              title: 'Producto eliminada',
-              text: 'El área se ha eliminado exitosamente.',
+              title: 'Producto eliminado',
+              text: 'El producto se ha eliminado exitosamente.',
               timer: 2000,
               showConfirmButton: false,
             });
@@ -147,7 +255,7 @@ const AgregarProducto = () => {
           Swal.fire({
             icon: 'error',
             title: 'Error en el servidor',
-            text: 'Ocurrió un error al intentar eliminar el producto.',
+            text: error.message || 'Ocurrió un error al intentar eliminar el producto.',
           });
         }
       }
@@ -157,7 +265,9 @@ const AgregarProducto = () => {
   return (
     <div className={styles.agregarProductoContainer}>
       <main className={`${styles.agregarProductoMainContent} ${styles.fadeIn}`}>
-        <h2 className={styles.agregarProductoTitle}>Agregar Producto</h2>
+        <h2 className={styles.agregarProductoTitle}>
+          {editingProducto ? "Editar Producto" : "Agregar Producto"}
+        </h2>
         <div className={styles.agregarProductoFormContainer}>
           <div className={styles.agregarProductoFormRow}>
             <input
@@ -189,7 +299,8 @@ const AgregarProducto = () => {
             <input
               type="text"
               placeholder="Características"
-              className={styles.agregarProductoInput}
+              className={              styles.agregarProductoInput
+              }
               name="caracteristicas"
               value={formData.caracteristicas}
               onChange={handleInputChange}
@@ -217,12 +328,21 @@ const AgregarProducto = () => {
           >
             Atrás
           </button>
-          <button
-            className={styles.agregarProductoAddButton}
-            onClick={handleAddProducto}
-          >
-            Agregar
-          </button>
+          {editingProducto ? (
+            <button
+              className={styles.agregarProductoAddButton}
+              onClick={handleSaveChanges}
+            >
+              Guardar Cambios
+            </button>
+          ) : (
+            <button
+              className={styles.agregarProductoAddButton}
+              onClick={handleAddProducto}
+            >
+              Agregar
+            </button>
+          )}
         </div>
 
         {/* Spinner o tabla de productos */}
@@ -253,14 +373,12 @@ const AgregarProducto = () => {
                     <td>{producto.modelo}</td>
                     <td>{producto.ruta_imagen}</td>
                     <td>{producto.caracteristicas}</td>
-                    <td>{producto.id_marca}</td>
+                    <td>{marcas.find((marca) => marca.id_marca === producto.id_marca)?.nombre_marca || "Sin marca"}</td>
                     <td>
                       <div className={styles.buttonGroup}>
                         <button
                           className={`${styles.actionButton} ${styles.editButton}`}
-                          onClick={() =>
-                            console.log(`Editar producto ${producto.id_producto}`)
-                          }
+                          onClick={() => handleEditProducto(producto.id_producto)}
                         >
                           <span className="material-icons">edit</span>
                         </button>
@@ -284,3 +402,4 @@ const AgregarProducto = () => {
 };
 
 export default AgregarProducto;
+
