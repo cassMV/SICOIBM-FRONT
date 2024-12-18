@@ -4,8 +4,7 @@ import Acciones from "./Components/pageAcciones/pageAcciones.jsx";
 import Menu from "./Components/Menu/Menu.jsx";
 import Usuarios from "./Components/pageUsuarios/pageUsuarios.jsx"
 import Resguardos from "./Components/pageResguardos/pageResguardos.jsx"
-
-
+import Bienes from "./Components/PageBienes/pageBienes.jsx"
 
 function App() {
   return (
@@ -20,6 +19,7 @@ function App() {
           <Route path="/" element={<Menu/>} />
           <Route path="/usuarios/*" element={<Usuarios/>}/>
           <Route path="/resguardos/*" element={<Resguardos/>}/>
+          <Route path="/bienes/*" element={<Bienes/>}></Route>
           {/* Agrega otras rutas principales si es necesario */}
           
         </Routes>
