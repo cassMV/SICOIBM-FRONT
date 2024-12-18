@@ -79,6 +79,51 @@ function AgregarMarca() {
     }
   };
 
+  // Función para eliminar un marca con confirmación
+  const handleDeleteMarca = async (id) => {
+    Swal.fire({
+      title: '¿Está seguro?',
+      text: 'Esta acción eliminará la marca permanentemente.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await axios.delete(
+            `${import.meta.env.VITE_API_URL}/marca/delete-marca/${id}`
+          );
+
+          if (response.data.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Marca eliminada',
+              text: 'La marca se ha eliminado exitosamente.',
+              timer: 2000,
+              showConfirmButton: false,
+            });
+
+            // Actualizar la lista de áreas
+            setMarcas(marcas.filter((marca) => marca.id_marca !== id));
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: response.data.message || 'No se pudo eliminar la marca.',
+            });
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error en el servidor',
+            text: 'Ocurrió un error al intentar eliminar la marca.',
+          });
+        }
+      }
+    });
+  };
+
   return (
     <div className={styles.agregarMarcaContainer}>
       <main className={`${styles.agregarMarcaMainContent} ${styles.fadeIn}`}>
@@ -153,7 +198,7 @@ function AgregarMarca() {
                         </button>
                         <button
                           className={`${styles.actionButton} ${styles.deleteButton}`}
-                          onClick={() => console.log(`Eliminar marca ${marca.id_marca}`)}
+                          onClick={() => handleDeleteMarca(marca.id_marca)}
                         >
                           <span className="material-icons">delete</span>
                         </button>

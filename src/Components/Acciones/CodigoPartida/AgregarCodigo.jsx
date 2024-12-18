@@ -109,6 +109,52 @@ function AgregarCodigo() {
     }
   };
 
+  // Función para eliminar un codigo con confirmación
+  const handleDeleteCodigo = async (id) => {
+    Swal.fire({
+      title: '¿Está seguro?',
+      text: 'Esta acción eliminará el codigo permanentemente.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await axios.delete(
+            `${import.meta.env.VITE_API_URL}/codigo-partida-especifica/delete-partida/${id}`
+          );
+
+          if (response.data.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Codigo eliminado',
+              text: 'El codigo se ha eliminado exitosamente.',
+              timer: 2000,
+              showConfirmButton: false,
+            });
+
+            // Actualizar la lista de áreas
+            setPartidas(partidas.filter((partida) => partida.id_partida !== id));
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: response.data.message || 'No se pudo eliminar el Codigo de partida.',
+            });
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error en el servidor',
+            text: 'Ocurrió un error al intentar eliminar el codigo de partida.',
+          });
+        }
+      }
+    });
+  };
+
+
   return (
     <div className={styles.agregarCodigoContainer}>
       <main className={`${styles.agregarCodigoMainContent} ${styles.fadeIn}`}>
@@ -220,7 +266,7 @@ function AgregarCodigo() {
                         </button>
                         <button
                           className={`${styles.actionButton} ${styles.deleteButton}`}
-                          onClick={() => console.log(`Eliminar partida ${partida.id_partida}`)}
+                          onClick={() => handleDeleteCodigo(partida.id_partida)}
                         >
                           <span className="material-icons">delete</span>
                         </button>

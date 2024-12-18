@@ -50,6 +50,7 @@ function AgregarDocumento() {
         );
         if (response.data.success) {
           setBienes(response.data.data);
+          console(response.data.data)
         }
       } catch (error) {
         console.error('Error al obtener los bienes:', error);

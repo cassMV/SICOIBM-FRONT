@@ -109,6 +109,51 @@ const AgregarProducto = () => {
     }
   };
 
+  // Función para eliminar un producto con confirmación
+  const handleDeleteProducto = async (id) => {
+    Swal.fire({
+      title: '¿Está seguro?',
+      text: 'Esta acción eliminará el producto permanentemente.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await axios.delete(
+            `${import.meta.env.VITE_API_URL}/producto/delete-producto/${id}`
+          );
+
+          if (response.data.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Producto eliminada',
+              text: 'El área se ha eliminado exitosamente.',
+              timer: 2000,
+              showConfirmButton: false,
+            });
+
+            // Actualizar la lista de productos
+            setProductos(productos.filter((producto) => producto.id_producto !== id));
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: response.data.message || 'No se pudo eliminar el producto.',
+            });
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error en el servidor',
+            text: 'Ocurrió un error al intentar eliminar el producto.',
+          });
+        }
+      }
+    });
+  };
+
   return (
     <div className={styles.agregarProductoContainer}>
       <main className={`${styles.agregarProductoMainContent} ${styles.fadeIn}`}>
@@ -221,9 +266,7 @@ const AgregarProducto = () => {
                         </button>
                         <button
                           className={`${styles.actionButton} ${styles.deleteButton}`}
-                          onClick={() =>
-                            console.log(`Eliminar producto ${producto.id_producto}`)
-                          }
+                          onClick={() => handleDeleteProducto(producto.id_producto)}
                         >
                           <span className="material-icons">delete</span>
                         </button>

@@ -75,6 +75,51 @@ function AgregarTipoAlta() {
     }
   };
 
+  // Función para eliminar un área con confirmación
+  const handleDeleteTipoAlta = async (id) => {
+    Swal.fire({
+      title: '¿Está seguro?',
+      text: 'Esta acción eliminará el tipo de alta permanentemente.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await axios.delete(
+            `${import.meta.env.VITE_API_URL}/tipo-alta/delete-tipo-alta/${id}`
+          );
+
+          if (response.data.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Tipo de alta eliminada',
+              text: 'El tipo de alta se ha eliminado exitosamente.',
+              timer: 2000,
+              showConfirmButton: false,
+            });
+
+            // Actualizar la lista de áreas
+            setTiposAlta(tiposAlta.filter((tipoAlta) => tipoAlta.id_tipo_alta !== id));
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: response.data.message || 'No se pudo eliminar el tipo de alta.',
+            });
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error en el servidor',
+            text: 'Ocurrió un error al intentar eliminar el tipo de alta.',
+          });
+        }
+      }
+    });
+  };
+
   return (
     <div className={styles.agregarTipoAltaContainer}>
       <main className={`${styles.agregarTipoAltaMainContent} ${styles.fadeIn}`}>
@@ -143,9 +188,7 @@ function AgregarTipoAlta() {
                         </button>
                         <button
                           className={`${styles.actionButton} ${styles.deleteButton}`}
-                          onClick={() =>
-                            console.log(`Eliminar tipo de alta ${tipoAlta.id_tipo_alta}`)
-                          }
+                          onClick={() => handleDeleteTipoAlta(tipoAlta.id_tipo_alta)}
                         >
                           <span className="material-icons">delete</span>
                         </button>

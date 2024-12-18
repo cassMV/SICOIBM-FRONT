@@ -71,6 +71,51 @@ function AgregarRecurso() {
     }
   };
 
+  // Función para eliminar un recurso con confirmación
+  const handleDeleteRecurso = async (id) => {
+    Swal.fire({
+      title: '¿Está seguro?',
+      text: 'Esta acción eliminará el recurso permanentemente.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await axios.delete(
+            `${import.meta.env.VITE_API_URL}/recurso-origen/delete-recurso-origen/${id}`
+          );
+
+          if (response.data.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Recurso eliminado',
+              text: 'El recurso se ha eliminado exitosamente.',
+              timer: 2000,
+              showConfirmButton: false,
+            });
+
+            // Actualizar la lista de recursos
+            setRecursos(recursos.filter((recurso) => recurso.id_recurso_origen !== id));
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: response.data.message || 'No se pudo eliminar el recurso.',
+            });
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error en el servidor',
+            text: 'Ocurrió un error al intentar eliminar el recurso.',
+          });
+        }
+      }
+    });
+  };
+
   return (
     <div className={styles.agregarRecursoContainer}>
       <main className={`${styles.agregarRecursoMainContent} ${styles.fadeIn}`}>
@@ -136,9 +181,7 @@ function AgregarRecurso() {
                         </button>
                         <button
                           className={`${styles.actionButton} ${styles.deleteButton}`}
-                          onClick={() =>
-                            console.log(`Eliminar recurso ${recurso.id_recurso_origen}`)
-                          }
+                          onClick={() => handleDeleteRecurso(recurso.id_recurso_origen)}
                         >
                           <span className="material-icons">delete</span>
                         </button>

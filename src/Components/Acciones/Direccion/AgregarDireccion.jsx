@@ -74,6 +74,51 @@ const AgregarDireccion = () => {
     }
   };
 
+  // Función para eliminar una direccion con confirmación
+  const handleDeleteDireccion = async (id) => {
+    Swal.fire({
+      title: '¿Está seguro?',
+      text: 'Esta acción eliminará el direccion permanentemente.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await axios.delete(
+            `${import.meta.env.VITE_API_URL}/direccion/delete-direccion/${id}`
+          );
+
+          if (response.data.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Direccion eliminada',
+              text: 'La direccion se ha eliminado exitosamente.',
+              timer: 2000,
+              showConfirmButton: false,
+            });
+
+            // Actualizar la lista de áreas
+            setDirecciones(direcciones.filter((direccion) => direccion.id_direccion !== id));
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: response.data.message || 'No se pudo eliminar la direccion.',
+            });
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error en el servidor',
+            text: 'Ocurrió un error al intentar eliminar la doreccion.',
+          });
+        }
+      }
+    });
+  };
+
   return (
     <div className={styles.agregarDireccionContainer}>
       <main className={`${styles.agregarDireccionMainContent} ${styles.fadeIn}`}>
@@ -128,7 +173,7 @@ const AgregarDireccion = () => {
                         </button>
                         <button
                           className={`${styles.actionButton} ${styles.deleteButton}`}
-                          onClick={() => console.log(`Eliminar dirección ${direccion.id_direccion}`)}
+                          onClick={() => handleDeleteDireccion(direccion.id_direccion)}
                         >
                           <span className="material-icons">delete</span>
                         </button>

@@ -75,6 +75,51 @@ const AgregarStatus = () => {
     }
   };
 
+  // Función para eliminar un status con confirmación
+  const handleDeleteStatus = async (id) => {
+    Swal.fire({
+      title: '¿Está seguro?',
+      text: 'Esta acción eliminará el status permanentemente.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await axios.delete(
+            `${import.meta.env.VITE_API_URL}/status-bien/delete-status-bien/${id}`
+          );
+
+          if (response.data.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Status eliminado',
+              text: 'El status se ha eliminado exitosamente.',
+              timer: 2000,
+              showConfirmButton: false,
+            });
+
+            // Actualizar la lista de áreas
+            setStatusBien(statusBien.filter((status) => status.id_status_bien !== id));
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: response.data.message || 'No se pudo eliminar el área.',
+            });
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error en el servidor',
+            text: 'Ocurrió un error al intentar eliminar el área.',
+          });
+        }
+      }
+    });
+  };
+
   return (
     <div className={styles.agregarStatusContainer}>
       <main className={`${styles.agregarStatusMainContent} ${styles.fadeIn}`}>
@@ -141,7 +186,7 @@ const AgregarStatus = () => {
                         </button>
                         <button
                           className={`${styles.actionButton} ${styles.deleteButton}`}
-                          onClick={() => console.log(`Eliminar estado ${status.id_status_bien}`)}
+                          onClick={() => handleDeleteStatus(status.id_status_bien)}
                         >
                           <span className="material-icons">delete</span>
                         </button>

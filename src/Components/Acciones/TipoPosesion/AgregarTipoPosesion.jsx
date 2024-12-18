@@ -77,6 +77,51 @@ function AgregarTipoPosesion() {
     }
   };
 
+  // Función para eliminar un tipo de posesion con confirmación
+  const handleDeleteTipoPosesion = async (id) => {
+    Swal.fire({
+      title: '¿Está seguro?',
+      text: 'Esta acción eliminará el tipo de posesion permanentemente.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await axios.delete(
+            `${import.meta.env.VITE_API_URL}/tipo-posesion/delete-posesion/${id}`
+          );
+
+          if (response.data.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Tipo de posesion eliminada',
+              text: 'El tipo de posesion se ha eliminado exitosamente.',
+              timer: 2000,
+              showConfirmButton: false,
+            });
+
+            // Actualizar la lista de áreas
+            setPosesiones(posesiones.filter((posesion) => posesion.id_tipo_posesion !== id));
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: response.data.message || 'No se pudo eliminar el área.',
+            });
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error en el servidor',
+            text: 'Ocurrió un error al intentar eliminar el área.',
+          });
+        }
+      }
+    });
+  };
+
   return (
     <div className={styles.agregarTipoPosesionContainer}>
       <main className={`${styles.agregarTipoPosesionMainContent} ${styles.fadeIn}`}>
@@ -160,9 +205,7 @@ function AgregarTipoPosesion() {
                         </button>
                         <button
                           className={`${styles.actionButton} ${styles.deleteButton}`}
-                          onClick={() =>
-                            console.log(`Eliminar posesión ${posesion.id_tipo_posesion}`)
-                          }
+                          onClick={() => handleDeleteTipoPosesion(posesion.id_tipo_posesion)}
                         >
                           <span className="material-icons">delete</span>
                         </button>

@@ -77,6 +77,51 @@ function AgregarSubcuenta() {
     }
   };
 
+  // Función para eliminar la subcuenta con confirmación
+  const handleDeleteSubcuenta = async (id) => {
+    Swal.fire({
+      title: '¿Está seguro?',
+      text: 'Esta acción eliminará la subcuenta permanentemente.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await axios.delete(
+            `${import.meta.env.VITE_API_URL}/subcuenta-armonizada/delete-subcuenta/${id}`
+          );
+
+          if (response.data.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Subcuenta eliminada',
+              text: 'La subcuenta se ha eliminado exitosamente.',
+              timer: 2000,
+              showConfirmButton: false,
+            });
+
+            // Actualizar la lista de áreas
+            setSubcuentas(subcuentas.filter((subcuenta) => subcuenta.id_subcuenta !== id));
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: response.data.message || 'No se pudo eliminar la subcuenta.',
+            });
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error en el servidor',
+            text: 'Ocurrió un error al intentar eliminar la subcuenta.',
+          });
+        }
+      }
+    });
+  };
+
   return (
     <div className={styles.agregarSubcuentaContainer}>
       <main className={`${styles.agregarSubcuentaMainContent} ${styles.fadeIn}`}>
@@ -171,9 +216,7 @@ function AgregarSubcuenta() {
                         </button>
                         <button
                           className={`${styles.actionButton} ${styles.deleteButton}`}
-                          onClick={() =>
-                            console.log(`Eliminar subcuenta ${subcuenta.id_subcuenta}`)
-                          }
+                          onClick={() => handleDeleteSubcuenta(subcuenta.id_subcuenta)}
                         >
                           <span className="material-icons">delete</span>
                         </button>

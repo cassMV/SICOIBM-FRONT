@@ -104,6 +104,50 @@ const AgregarEmpleado = () => {
     }
   };
 
+  const handleDeleteEmpleado = async (id) => {
+    Swal.fire({
+      title: '¿Está seguro?',
+      text: 'Esta acción eliminará el empleado permanentemente.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await axios.delete(
+            `${import.meta.env.VITE_API_URL}/empleado/delete-empleado/${id}`
+          );
+
+          if (response.data.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Empleado eliminada',
+              text: 'El empleado se ha eliminado exitosamente.',
+              timer: 2000,
+              showConfirmButton: false,
+            });
+
+            // Actualizar la lista de empleados
+            setEmpleados(empleados.filter((empleado) => empleado.id_empleado !== id));
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: response.data.message || 'No se pudo eliminar el empleado.',
+            });
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error en el servidor',
+            text: 'Ocurrió un error al intentar eliminar el empleado.',
+          });
+        }
+      }
+    });
+  };
+
   return (
     <div className={styles.agregarEmpleadoContainer}>
       <main className={`${styles.agregarEmpleadoMainContent} ${styles.fadeIn}`}>
@@ -214,13 +258,14 @@ const AgregarEmpleado = () => {
                     <td>{empleado.id_area}</td>
                     <td>
                       <div className={styles.buttonGroup}>
-                      <button
+                        <button
                           className={`${styles.actionButton} ${styles.editButton}`}
                         >
                           <span className="material-icons">edit</span>
                         </button>
                         <button
                           className={`${styles.actionButton} ${styles.deleteButton}`}
+                          onClick={() => handleDeleteEmpleado(empleado.id_empleado)}
                         >
                           <span className="material-icons">delete</span>
                         </button>

@@ -79,6 +79,51 @@ const AgregarRol = () => {
     }
   };
 
+  // Función para eliminar un área con confirmación
+  const handleDeleteRol = async (id) => {
+    Swal.fire({
+      title: '¿Está seguro?',
+      text: 'Esta acción eliminará el rol permanentemente.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar',
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await axios.delete(
+            `${import.meta.env.VITE_API_URL}/rol/delete-rol/${id}`
+          );
+
+          if (response.data.success) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Rol eliminada',
+              text: 'El rol se ha eliminado exitosamente.',
+              timer: 2000,
+              showConfirmButton: false,
+            });
+
+            // Actualizar la lista de áreas
+            setRoles(roles.filter((rol) => rol.id_rol !== id));
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: response.data.message || 'No se pudo eliminar el rol.',
+            });
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error en el servidor',
+            text: 'Ocurrió un error al intentar eliminar el rol.',
+          });
+        }
+      }
+    });
+  };
+
   return (
     <div className={styles.agregarRolContainer}>
       <main className={`${styles.agregarRolMainContent} ${styles.fadeIn}`}>
@@ -151,7 +196,7 @@ const AgregarRol = () => {
                         </button>
                         <button
                           className={`${styles.actionButton} ${styles.deleteButton}`}
-                          onClick={() => console.log(`Eliminar rol ${rol.id_rol}`)}
+                          onClick={() => handleDeleteRol(rol.id_rol)}
                         >
                           <span className="material-icons">delete</span>
                         </button>
