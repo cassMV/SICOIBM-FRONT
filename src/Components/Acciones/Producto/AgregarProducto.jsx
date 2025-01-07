@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { TailSpin } from "react-loader-spinner"; // Spinner para animación de carga
 import Swal from "sweetalert2"; // Notificaciones
 import styles from "./AgregarProducto.module.css";
+import axiosInstance from "../../../config/axios.config";
 
 const AgregarProducto = () => {
   const navigate = useNavigate();
@@ -26,9 +26,7 @@ const AgregarProducto = () => {
   useEffect(() => {
     const fetchProductos = async () => {
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/producto/get-productos`
-        );
+        const response = await axiosInstance.get("/producto/get-productos");
         if (response.data.success) {
           setProductos(response.data.data);
         } else {
@@ -48,9 +46,7 @@ const AgregarProducto = () => {
   useEffect(() => {
     const fetchMarcas = async () => {
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/marca/get-marcas`
-        );
+        const response = await axiosInstance.get("/marca/get-marcas");
         if (response.data.success) {
           setMarcas(response.data.data);
         } else {
@@ -76,10 +72,7 @@ const AgregarProducto = () => {
   // Función para enviar los datos del formulario (Agregar Producto)
   const handleAddProducto = async () => {
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/producto/create-producto`,
-        formData
-      );
+      const response = await axiosInstance.post("/producto/create-producto", formData);
 
       if (response.data.success) {
         Swal.fire({
@@ -114,9 +107,7 @@ const AgregarProducto = () => {
   // Función para cargar datos de producto en formulario para edición
   const handleEditProducto = async (id) => {
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/producto/get-producto/${id}`
-      );
+      const response = await axiosInstance.get(`/producto/get-producto/${id}`);
       if (response.data.success) {
         const producto = response.data.data;
         setFormData({
@@ -126,13 +117,7 @@ const AgregarProducto = () => {
           caracteristicas: producto.caracteristicas,
           id_marca: producto.id_marca,
         });
-        setOriginalData({
-          nombre_producto: producto.nombre_producto,
-          modelo: producto.modelo,
-          ruta_imagen: producto.ruta_imagen,
-          caracteristicas: producto.caracteristicas,
-          id_marca: producto.id_marca,
-        }); // Guarda los datos originales
+        setOriginalData(producto); // Guarda los datos originales
         setEditingProducto(id);
       } else {
         console.error("Error al cargar producto:", response.data.message);
@@ -145,30 +130,22 @@ const AgregarProducto = () => {
   // Función para guardar cambios de un producto editado
   const handleSaveChanges = async () => {
     try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/producto/update-producto/${editingProducto}`,
+      const response = await axiosInstance.put(
+        `/producto/update-producto/${editingProducto}`,
         formData
       );
 
       if (response.data.success) {
-        // Obtener nombre de la marca actualizada
-        const marcaResponse = await axios.get(
-          `${import.meta.env.VITE_API_URL}/marca/get-marca/${formData.id_marca}`
-        );
-        const nombreMarca = marcaResponse.data.data.nombre_marca;
-
         const changes = Object.entries(formData)
           .filter(([key, value]) => value !== originalData[key])
           .map(([key, value]) => {
-            const displayValue =
-              key === "id_marca" ? `${originalData[key]} → ${nombreMarca}` : `${originalData[key]} → ${value}`;
-            return `<p><b>${key}:</b> ${displayValue}</p>`;
+            return `<p><b>${key}:</b> ${originalData[key]} → ${value}</p>`;
           })
-          .join('');
+          .join("");
 
         Swal.fire({
           title: "Confirmar Cambios",
-          html: changes.length > 0 ? changes : '<p>No hay cambios realizados.</p>',
+          html: changes.length > 0 ? changes : "<p>No hay cambios realizados.</p>",
           icon: "info",
           showCancelButton: true,
           confirmButtonText: "Guardar",
@@ -220,24 +197,22 @@ const AgregarProducto = () => {
   // Función para eliminar un producto con confirmación
   const handleDeleteProducto = async (id) => {
     Swal.fire({
-      title: '¿Está seguro?',
-      text: 'Esta acción eliminará el producto permanentemente.',
-      icon: 'warning',
+      title: "¿Está seguro?",
+      text: "Esta acción eliminará el producto permanentemente.",
+      icon: "warning",
       showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const response = await axios.delete(
-            `${import.meta.env.VITE_API_URL}/producto/delete-producto/${id}`
-          );
+          const response = await axiosInstance.delete(`/producto/delete-producto/${id}`);
 
           if (response.data.success) {
             Swal.fire({
-              icon: 'success',
-              title: 'Producto eliminado',
-              text: 'El producto se ha eliminado exitosamente.',
+              icon: "success",
+              title: "Producto eliminado",
+              text: "El producto se ha eliminado exitosamente.",
               timer: 2000,
               showConfirmButton: false,
             });
@@ -246,16 +221,16 @@ const AgregarProducto = () => {
             setProductos(productos.filter((producto) => producto.id_producto !== id));
           } else {
             Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: response.data.message || 'No se pudo eliminar el producto.',
+              icon: "error",
+              title: "Error",
+              text: response.data.message || "No se pudo eliminar el producto.",
             });
           }
         } catch (error) {
           Swal.fire({
-            icon: 'error',
-            title: 'Error en el servidor',
-            text: error.message || 'Ocurrió un error al intentar eliminar el producto.',
+            icon: "error",
+            title: "Error en el servidor",
+            text: error.message || "Ocurrió un error al intentar eliminar el producto.",
           });
         }
       }
@@ -299,8 +274,7 @@ const AgregarProducto = () => {
             <input
               type="text"
               placeholder="Características"
-              className={              styles.agregarProductoInput
-              }
+              className={styles.agregarProductoInput}
               name="caracteristicas"
               value={formData.caracteristicas}
               onChange={handleInputChange}
@@ -308,7 +282,7 @@ const AgregarProducto = () => {
             {/* Select para las marcas */}
             <select
               name="id_marca"
-              className={styles.agregarProductoSelect}
+              className={styles.agregarProductoInput}
               value={formData.id_marca}
               onChange={handleInputChange}
             >
@@ -359,7 +333,7 @@ const AgregarProducto = () => {
                   <th>ID</th>
                   <th>Nombre</th>
                   <th>Modelo</th>
-                  <th>Ruta Imagen</th>
+                  <th>Imagen</th>
                   <th>Características</th>
                   <th>Marca</th>
                   <th>Opciones</th>
@@ -397,6 +371,12 @@ const AgregarProducto = () => {
           </>
         )}
       </main>
+      <button
+        className={styles.agregarProductoHomeButton}
+        onClick={() => navigate('/')}
+      >
+        🏠
+      </button>
     </div>
   );
 };

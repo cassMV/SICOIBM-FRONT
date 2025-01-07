@@ -16,6 +16,14 @@
   padding: 10px 20px;
 }
 
+.agregarBien2Header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #a12d2f;
+  padding: 10px 20px;
+}
+
 .agregarBien2Logo {
   height: 80px;
   width: 400px;
@@ -95,7 +103,7 @@
   top: 15%;
   width: 80%;
   text-align: center;
-  margin-left: 250px;
+  margin-left: 270px;
   font-family: 'Times New Roman';
 }
 
@@ -159,21 +167,128 @@
 }
 
 .agregarBien2HomeButton {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  background-color: #333;
-  color: white;
-  font-size: 24px;
-  border: none;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  cursor: pointer;
+  position: fixed; /* Fija el botón a la ventana del navegador */
+  bottom: 20px; /* Alinea a 20px desde la parte inferior */
+  right: 20px; /* Alinea a 20px desde la parte derecha */
+  background-color: #333; /* Fondo gris oscuro */
+  color: white; /* Texto blanco */
+  font-size: 24px; /* Tamaño del texto */
+  border: none; /* Sin borde */
+  border-radius: 50%; /* Botón circular */
+  width: 50px; /* Ancho del botón */
+  height: 50px; /* Alto del botón */
+  cursor: pointer; /* Cambia el cursor a puntero al pasar el mouse */
+  z-index: 1000; /* Asegura que esté por encima de otros elementos */
 }
 
 .agregarDocumentoHomeButton:hover {
   background-color: #555;
 }
 
+.tableTitle {
+  margin-top: 20px;
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+  text-align: left;
+}
+
+.bienTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 9px;
+  text-align: left;
+  background-color: #f9f9f9;
+}
+
+.bienTable th,
+.bienTable td {
+  border: 1px solid #a12d2f;
+  padding: 12px;
+}
+
+.bienTable th {
+  background-color: #a12d2f;
+  color: white;
+  font-weight: bold;
+  text-align: center;
+}
+
+.bienTable td {
+  text-align: center;
+}
+
+.bienTable tr:nth-child(even) {
+  background-color: #f2f2f2;
+}
+
+.bienTable tr:hover {
+  background-color: #e0e0e0;
+}
+
+.agregarBienEditButton {
+  background-color: #5cb85c;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+.agregarBienDeleteButton {
+  background-color: #d61a1d;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+.agregarBienEditButton:hover,
+.agregarBienDeleteButton:hover {
+  opacity: 0.8;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+}
+
+.actionButton {
+  padding: 5px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 35px;
+  height: 35px;
+}
+
+.editButton {
+  background-color: #28a745;
+  color: white;
+}
+
+.deleteButton {
+  background-color: #dc3545;
+  color: white;
+}
+
+.editButton:hover {
+  background-color: #218838;
+}
+
+.deleteButton:hover {
+  background-color: #c82333;
+}
+
+.material-icons {
+  font-size: 20px;
+  vertical-align: middle;
+}
 

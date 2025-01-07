@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../../../config/axios.config'; // Asegúrate de importar la configuración de Axios
 import { TailSpin } from 'react-loader-spinner'; // Spinner para animación de carga
 import Swal from 'sweetalert2'; // Notificaciones
 import styles from './AgregarRecurso.module.css';
@@ -13,13 +13,15 @@ function AgregarRecurso() {
   // Estado del formulario
   const [descripcionRecurso, setDescripcionRecurso] = useState('');
 
+  // Estado para edición
+  const [editingId, setEditingId] = useState(null);
+  const [originalData, setOriginalData] = useState({});
+
   // Obtener recursos desde la API
   useEffect(() => {
     const fetchRecursos = async () => {
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/recurso-origen/get-recursos-origen`
-        );
+        const response = await axiosInstance.get('/recurso-origen/get-recursos-origen');
         if (response.data.success) {
           setRecursos(response.data.data);
         } else {
@@ -39,13 +41,10 @@ function AgregarRecurso() {
   const handleAddRecurso = async () => {
     try {
       const body = {
-        descripcion_recurso: descripcionRecurso, // Valor del select
+        descripcion_recurso: descripcionRecurso,
       };
 
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/recurso-origen/create-recurso-origen`,
-        body
-      );
+      const response = await axiosInstance.post('/recurso-origen/create-recurso-origen', body);
 
       if (response.data.success) {
         Swal.fire({
@@ -53,8 +52,8 @@ function AgregarRecurso() {
           title: '¡Recurso agregado!',
           text: 'El recurso de origen se ha agregado exitosamente.',
         });
-        setRecursos([...recursos, response.data.data]); // Actualiza la tabla
-        setDescripcionRecurso(''); // Limpia el formulario
+        setRecursos([...recursos, response.data.data]);
+        setDescripcionRecurso('');
       } else {
         Swal.fire({
           icon: 'error',
@@ -83,9 +82,7 @@ function AgregarRecurso() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const response = await axios.delete(
-            `${import.meta.env.VITE_API_URL}/recurso-origen/delete-recurso-origen/${id}`
-          );
+          const response = await axiosInstance.delete(`/recurso-origen/delete-recurso-origen/${id}`);
 
           if (response.data.success) {
             Swal.fire({
@@ -96,7 +93,6 @@ function AgregarRecurso() {
               showConfirmButton: false,
             });
 
-            // Actualizar la lista de recursos
             setRecursos(recursos.filter((recurso) => recurso.id_recurso_origen !== id));
           } else {
             Swal.fire({
@@ -116,10 +112,96 @@ function AgregarRecurso() {
     });
   };
 
+  // Función para iniciar la edición de un recurso
+  const handleEditRecurso = async (id) => {
+    try {
+      const response = await axiosInstance.get(`/recurso-origen/get-recurso-origen/${id}`);
+      if (response.data.success) {
+        const { descripcion_recurso } = response.data.data;
+        setDescripcionRecurso(descripcion_recurso);
+        setEditingId(id);
+        setOriginalData(response.data.data);
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudo cargar el recurso.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: error.message || 'Error desconocido.',
+      });
+    }
+  };
+
+  // Función para guardar los cambios de un recurso editado
+  const handleSaveChanges = async () => {
+    try {
+      const body = {
+        descripcion_recurso: descripcionRecurso,
+      };
+
+      const response = await axiosInstance.put(
+        `/recurso-origen/update-recurso-origen/${editingId}`,
+        body
+      );
+
+      if (response.data.success) {
+        const changes = Object.entries(body)
+          .filter(([key, value]) => value !== originalData[key])
+          .map(([key, value]) => `<b>${key}:</b> ${originalData[key]} → ${value}`)
+          .join('<br>');
+
+        Swal.fire({
+          title: 'Confirmar Cambios',
+          html: changes.length > 0 ? changes : '<p>No hay cambios realizados.</p>',
+          icon: 'info',
+          showCancelButton: true,
+          confirmButtonText: 'Guardar',
+          cancelButtonText: 'Cancelar',
+        }).then((result) => {
+          if (result.isConfirmed) {
+            Swal.fire({
+              icon: 'success',
+              title: 'Cambios guardados',
+              text: 'El recurso se ha actualizado exitosamente.',
+            });
+
+            setRecursos((prev) =>
+              prev.map((recurso) =>
+                recurso.id_recurso_origen === editingId ? { ...recurso, ...body } : recurso
+              )
+            );
+
+            setDescripcionRecurso('');
+            setEditingId(null);
+          }
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: response.data.message || 'No se pudieron guardar los cambios.',
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error en el servidor',
+        text: error.message || 'Error desconocido.',
+      });
+    }
+  };
+
   return (
     <div className={styles.agregarRecursoContainer}>
       <main className={`${styles.agregarRecursoMainContent} ${styles.fadeIn}`}>
-        <h2 className={styles.agregarRecursoTitle}>Agregar Recurso de Origen</h2>
+      <h2 className={styles.agregarRecursoTitle}>
+          {editingId ? 'Editar Recurso Origen' : 'Agregar Recurso Origen'}
+        </h2>
         <div className={styles.agregarRecursoFormContainer}>
           <div className={styles.agregarRecursoFormRow}>
             <select
@@ -140,12 +222,21 @@ function AgregarRecurso() {
           >
             Atrás
           </button>
-          <button
-            className={styles.agregarRecursoAddButton}
-            onClick={handleAddRecurso}
-          >
-            Agregar
-          </button>
+          {editingId ? (
+            <button
+              className={styles.agregarRecursoSaveButton}
+              onClick={handleSaveChanges}
+            >
+              Guardar Cambios
+            </button>
+          ) : (
+            <button
+              className={styles.agregarRecursoAddButton}
+              onClick={handleAddRecurso}
+            >
+              Agregar
+            </button>
+          )}
         </div>
 
         {/* Spinner o tabla de recursos */}
@@ -171,11 +262,9 @@ function AgregarRecurso() {
                     <td>{recurso.descripcion_recurso}</td>
                     <td>
                       <div className={styles.buttonGroup}>
-                        <button
+                      <button
                           className={`${styles.actionButton} ${styles.editButton}`}
-                          onClick={() =>
-                            console.log(`Editar recurso ${recurso.id_recurso_origen}`)
-                          }
+                          onClick={() => handleEditRecurso(recurso.id_recurso_origen)}
                         >
                           <span className="material-icons">edit</span>
                         </button>

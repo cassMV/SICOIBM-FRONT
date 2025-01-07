@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axiosInstance from '../../../config/axios.config'; // Importa la instancia configurada de Axios
 import { TailSpin } from 'react-loader-spinner';
-import axios from 'axios';
 import Swal from 'sweetalert2'; // Importar SweetAlert
 import styles from './AgregarDireccion.module.css'; // Asegúrate de crear o modificar un archivo CSS para este componente
 
@@ -17,7 +17,7 @@ const AgregarDireccion = () => {
   useEffect(() => {
     const fetchDirecciones = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/direccion/get-direcciones`);
+        const response = await axiosInstance.get('/direccion/get-direcciones');
         if (response.data.success) {
           setDirecciones(response.data.data);
         } else {
@@ -44,7 +44,7 @@ const AgregarDireccion = () => {
     }
 
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/direccion/create-direccion`, {
+      const response = await axiosInstance.post('/direccion/create-direccion', {
         nombre_direccion: nombreDireccion,
       });
 
@@ -79,9 +79,7 @@ const AgregarDireccion = () => {
   // Función para cargar datos de dirección en formulario para edición
   const handleEditDireccion = async (id) => {
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/direccion/get-direccion/${id}`
-      );
+      const response = await axiosInstance.get(`/direccion/get-direccion/${id}`);
       if (response.data.success) {
         const direccion = response.data.data;
         setNombreDireccion(direccion.nombre_direccion);
@@ -107,12 +105,9 @@ const AgregarDireccion = () => {
     }
 
     try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/direccion/update-direccion/${editingDireccion}`,
-        {
-          nombre_direccion: nombreDireccion,
-        }
-      );
+      const response = await axiosInstance.put(`/direccion/update-direccion/${editingDireccion}`, {
+        nombre_direccion: nombreDireccion,
+      });
 
       if (response.data.success) {
         const changes = Object.entries({ nombre_direccion: nombreDireccion })
@@ -177,9 +172,7 @@ const AgregarDireccion = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const response = await axios.delete(
-            `${import.meta.env.VITE_API_URL}/direccion/delete-direccion/${id}`
-          );
+          const response = await axiosInstance.delete(`/direccion/delete-direccion/${id}`);
 
           if (response.data.success) {
             Swal.fire({
@@ -294,7 +287,9 @@ const AgregarDireccion = () => {
           </>
         )}
       </main>
-      <button className={styles.agregarDireccionHomeButton} onClick={() => navigate('/')}>🏠</button>
+      <button className={styles.agregarDireccionHomeButton} onClick={() => navigate('/')}>
+        🏠
+      </button>
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from "../../../config/axios.config"; // Asegúrate de importar tu configuración de Axios
 import { TailSpin } from "react-loader-spinner";
 import Swal from "sweetalert2";
 import styles from "./AgregarEmpleado.module.css";
@@ -11,7 +11,6 @@ const AgregarEmpleado = () => {
   const [areas, setAreas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Estado del formulario
   const [formData, setFormData] = useState({
     nombre_empleado: "",
     correo_electronico: "",
@@ -21,17 +20,15 @@ const AgregarEmpleado = () => {
     id_area: "",
   });
 
-  const [editMode, setEditMode] = useState(false); // Indica si estamos en modo edición
-  const [selectedEmpleadoId, setSelectedEmpleadoId] = useState(null); // ID del empleado a editar
-  const [originalData, setOriginalData] = useState({}); // Datos originales del empleado
+  const [editMode, setEditMode] = useState(false);
+  const [selectedEmpleadoId, setSelectedEmpleadoId] = useState(null);
+  const [originalData, setOriginalData] = useState({});
 
   // Obtener empleados
   useEffect(() => {
     const fetchEmpleados = async () => {
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/empleado/get-empleados`
-        );
+        const response = await axiosInstance.get("/empleado/get-empleados");
         if (response.data.success) {
           setEmpleados(response.data.data);
         }
@@ -48,9 +45,7 @@ const AgregarEmpleado = () => {
   useEffect(() => {
     const fetchAreas = async () => {
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/area/get-areas`
-        );
+        const response = await axiosInstance.get("/area/get-areas");
         if (response.data.success) {
           setAreas(response.data.data);
         }
@@ -61,7 +56,6 @@ const AgregarEmpleado = () => {
     fetchAreas();
   }, []);
 
-  // Manejo de cambios en inputs
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -70,13 +64,9 @@ const AgregarEmpleado = () => {
     });
   };
 
-  // Agregar empleado
   const handleAddEmpleado = async () => {
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/empleado/create-empleado`,
-        formData
-      );
+      const response = await axiosInstance.post("/empleado/create-empleado", formData);
       if (response.data.success) {
         Swal.fire({
           icon: "success",
@@ -108,17 +98,14 @@ const AgregarEmpleado = () => {
     }
   };
 
-  // Manejar edición de empleado
   const handleEditEmpleado = async (id) => {
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/empleado/get-empleado/${id}`
-      );
+      const response = await axiosInstance.get(`/empleado/get-empleado/${id}`);
       if (response.data.success) {
-        setFormData(response.data.data); // Rellena el formulario con los datos del empleado
-        setOriginalData(response.data.data); // Almacena los datos originales
+        setFormData(response.data.data);
+        setOriginalData(response.data.data);
         setEditMode(true);
-        setSelectedEmpleadoId(id); // Guarda el ID del empleado en edición
+        setSelectedEmpleadoId(id);
       } else {
         Swal.fire({
           icon: "error",
@@ -135,13 +122,9 @@ const AgregarEmpleado = () => {
     }
   };
 
-  // Guardar cambios en un empleado
   const handleUpdateEmpleado = async () => {
     try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/empleado/update-empleado/${selectedEmpleadoId}`,
-        formData
-      );
+      const response = await axiosInstance.put(`/empleado/update-empleado/${selectedEmpleadoId}`, formData);
       if (response.data.success) {
         const changes = Object.entries(formData)
           .filter(([key, value]) => value !== originalData[key])
@@ -169,7 +152,6 @@ const AgregarEmpleado = () => {
               text: "El empleado se ha actualizado exitosamente.",
             });
 
-            // Actualizar la lista de empleados
             setEmpleados(
               empleados.map((empleado) =>
                 empleado.id_empleado === selectedEmpleadoId
@@ -178,7 +160,6 @@ const AgregarEmpleado = () => {
               )
             );
 
-            // Resetear el formulario
             setFormData({
               nombre_empleado: "",
               correo_electronico: "",
@@ -249,14 +230,16 @@ const AgregarEmpleado = () => {
               value={formData.numero_contacto}
               onChange={handleInputChange}
             />
-            <input
-              type="text"
+            <select
               name="status_empleado"
-              placeholder="Estatus"
               className={styles.agregarEmpleadoInput}
               value={formData.status_empleado}
               onChange={handleInputChange}
-            />
+            >
+              <option value="">Status del Empleado</option>
+              <option value="Activo">Activo</option>
+              <option value="Inactivo">Inactivo</option>
+            </select>
             <select
               name="id_area"
               className={styles.agregarEmpleadoInput}
@@ -355,9 +338,14 @@ const AgregarEmpleado = () => {
           </>
         )}
       </main>
+      <button
+        className={styles.agregarEmpleadoHomeButton}
+        onClick={() => navigate('/')}
+      >
+        🏠
+      </button>
     </div>
   );
 };
 
 export default AgregarEmpleado;
-

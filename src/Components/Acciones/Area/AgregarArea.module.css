@@ -4,9 +4,8 @@
   height: 100vh;
   background-color: #e5e5e5;
   font-family: 'Times New Roman';
-  width: 0vw;
+  width: 100vw;
   box-sizing: border-box;
-  margin-left: 240px;
 }
 
 .agregarAreaLogo {
@@ -80,7 +79,7 @@
   top: 15%;
   width: 80%;
   text-align: center;
-  margin-left: 0px;
+  margin-left: 250px;
   font-family: 'Times New Roman';
 }
 
@@ -128,7 +127,8 @@
 }
 
 .agregarAreaBackButtonAction,
-.agregarAreaAddButton {
+.agregarAreaAddButton,
+.agregarAreaSaveButton {
   padding: 10px 20px;
   background-color: gray;
   color: white;
@@ -233,7 +233,6 @@
   font-size: 20px;
   vertical-align: middle;
 }
-
 
 .areaTable tr:hover {
   background-color: #e0e0e0;

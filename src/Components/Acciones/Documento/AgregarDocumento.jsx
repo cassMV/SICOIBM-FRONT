@@ -1,20 +1,19 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { TailSpin } from 'react-loader-spinner'; // Spinner para animación de carga
-import Swal from 'sweetalert2'; // Notificaciones
+import axiosInstance from '../../../config/axios.config'; // Asegúrate de importar tu configuración de Axios
+import { TailSpin } from 'react-loader-spinner';
+import Swal from 'sweetalert2';
 import styles from './AgregarDocumento.module.css';
 
 function AgregarDocumento() {
   const navigate = useNavigate();
   const [documentos, setDocumentos] = useState([]);
-  const [bienes, setBienes] = useState([]); // Estado para los bienes
+  const [bienes, setBienes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [editMode, setEditMode] = useState(false); // Modo edición
-  const [selectedDocumentoId, setSelectedDocumentoId] = useState(null); // ID del documento en edición
-  const [originalData, setOriginalData] = useState({}); // Datos originales del documento
+  const [editMode, setEditMode] = useState(false);
+  const [selectedDocumentoId, setSelectedDocumentoId] = useState(null);
+  const [originalData, setOriginalData] = useState({});
 
-  // Estado del formulario
   const [formData, setFormData] = useState({
     factura_documento: '',
     fecha_documento: '',
@@ -24,13 +23,11 @@ function AgregarDocumento() {
     id_bien: '',
   });
 
-  // Obtener documentos desde la API
+  // Obtener documentos
   useEffect(() => {
     const fetchDocumentos = async () => {
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/documentos/get-documentos`
-        );
+        const response = await axiosInstance.get('/documentos/get-documentos');
         if (response.data.success) {
           setDocumentos(response.data.data);
         }
@@ -44,13 +41,11 @@ function AgregarDocumento() {
     fetchDocumentos();
   }, []);
 
-  // Obtener bienes desde la API
+  // Obtener bienes
   useEffect(() => {
     const fetchBienes = async () => {
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/bien/get-bienes`
-        );
+        const response = await axiosInstance.get('/bien/get-bienes');
         if (response.data.success) {
           setBienes(response.data.data);
         }
@@ -62,7 +57,6 @@ function AgregarDocumento() {
     fetchBienes();
   }, []);
 
-  // Manejo de cambios en el formulario
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -76,18 +70,15 @@ function AgregarDocumento() {
     return date.toISOString();
   };
 
-  const prepareFormData = () => {
-    return {
-      ...formData,
-      fecha_documento: formatISODate(formData.fecha_documento),
-    };
-  };
+  const prepareFormData = () => ({
+    ...formData,
+    fecha_documento: formatISODate(formData.fecha_documento),
+  });
 
-  // Función para enviar los datos del formulario
   const handleAddDocumento = async () => {
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/documentos/create-documento`,
+      const response = await axiosInstance.post(
+        '/documentos/create-documento',
         prepareFormData()
       );
 
@@ -122,12 +113,9 @@ function AgregarDocumento() {
     }
   };
 
-  // Función para cargar datos para edición
   const handleEditDocumento = async (id) => {
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/documentos/get-documento/${id}`
-      );
+      const response = await axiosInstance.get(`/documentos/get-documento/${id}`);
       if (response.data.success) {
         const documento = response.data.data;
         setFormData({
@@ -138,7 +126,7 @@ function AgregarDocumento() {
           comentarios: documento.comentarios,
           id_bien: documento.id_bien,
         });
-        setOriginalData(documento); // Guardar los datos originales
+        setOriginalData(documento);
         setEditMode(true);
         setSelectedDocumentoId(id);
       } else {
@@ -157,11 +145,10 @@ function AgregarDocumento() {
     }
   };
 
-  // Guardar cambios en el documento
   const handleSaveChanges = async () => {
     try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/documentos/update-documento/${selectedDocumentoId}`,
+      const response = await axiosInstance.put(
+        `/documentos/update-documento/${selectedDocumentoId}`,
         prepareFormData()
       );
 
@@ -186,7 +173,6 @@ function AgregarDocumento() {
               text: 'El documento se ha actualizado exitosamente.',
             });
 
-            // Actualizar la lista
             setDocumentos((prev) =>
               prev.map((documento) =>
                 documento.id_documento === selectedDocumentoId
@@ -195,7 +181,6 @@ function AgregarDocumento() {
               )
             );
 
-            // Resetear formulario
             setFormData({
               factura_documento: '',
               fecha_documento: '',
@@ -264,12 +249,12 @@ function AgregarDocumento() {
               value={formData.documento_ampare_propiedad}
               onChange={handleInputChange}
             >
-              <option value="">Documento que Ampare la Propiedad del Bien</option>
+              <option value="">Documento que Ampare la Propiedad</option>
               <option value="Comprobante Fiscal Digital por Internet">
                 Comprobante Fiscal Digital por Internet
               </option>
               <option value="Contrato de Comodato">Contrato de Comodato</option>
-              <option value="Contrato de               Donación">Contrato de Donación</option>
+              <option value="Contrato de Donación">Contrato de Donación</option>
               <option value="Resguardo Oficial de Asignación">
                 Resguardo Oficial de Asignación
               </option>
@@ -380,6 +365,12 @@ function AgregarDocumento() {
           </>
         )}
       </main>
+      <button
+        className={styles.agregarDocumentoHomeButton}
+        onClick={() => navigate('/')}
+      >
+        🏠
+      </button>
     </div>
   );
 }

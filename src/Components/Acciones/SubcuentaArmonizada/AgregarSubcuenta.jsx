@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../../../config/axios.config'; // Importar la instancia de Axios
 import { TailSpin } from 'react-loader-spinner'; // Spinner para animación de carga
 import Swal from 'sweetalert2'; // Notificaciones
 import styles from './AgregarSubcuenta.module.css';
@@ -23,9 +23,7 @@ function AgregarSubcuenta() {
   useEffect(() => {
     const fetchSubcuentas = async () => {
       try {
-        const response = await axios.get(
-          'http://localhost:3100/api/subcuenta-armonizada/get-subcuentas'
-        );
+        const response = await axiosInstance.get('/subcuenta-armonizada/get-subcuentas');
         if (response.data.success) {
           setSubcuentas(response.data.data);
         } else {
@@ -50,10 +48,7 @@ function AgregarSubcuenta() {
         borrador_subcuenta: borradorSubcuenta === 'Habilitado', // Convierte a booleano
       };
 
-      const response = await axios.post(
-        'http://localhost:3100/api/subcuenta-armonizada/create-subcuenta',
-        body
-      );
+      const response = await axiosInstance.post('/subcuenta-armonizada/create-subcuenta', body);
 
       if (response.data.success) {
         Swal.fire({
@@ -62,9 +57,7 @@ function AgregarSubcuenta() {
           text: 'La subcuenta armonizada se ha agregado exitosamente.',
         });
         setSubcuentas([...subcuentas, response.data.data]); // Actualiza la tabla
-        setNombreSubcuenta('');
-        setStatusSubcuenta('');
-        setBorradorSubcuenta('');
+        resetForm();
       } else {
         Swal.fire({
           icon: 'error',
@@ -93,10 +86,7 @@ function AgregarSubcuenta() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const response = await axios.delete(
-            `${import.meta.env.VITE_API_URL}/subcuenta-armonizada/delete-subcuenta/${id}`
-          );
-
+          const response = await axiosInstance.delete(`/subcuenta-armonizada/delete-subcuenta/${id}`);
           if (response.data.success) {
             Swal.fire({
               icon: 'success',
@@ -105,8 +95,6 @@ function AgregarSubcuenta() {
               timer: 2000,
               showConfirmButton: false,
             });
-
-            // Actualizar la lista de áreas
             setSubcuentas(subcuentas.filter((subcuenta) => subcuenta.id_subcuenta !== id));
           } else {
             Swal.fire({
@@ -129,9 +117,7 @@ function AgregarSubcuenta() {
   // Función para iniciar la edición de una subcuenta
   const handleEditSubcuenta = async (id) => {
     try {
-      const response = await axios.get(
-        `http://localhost:3100/api/subcuenta-armonizada/get-subcuenta/${id}`
-      );
+      const response = await axiosInstance.get(`/subcuenta-armonizada/get-subcuenta/${id}`);
       if (response.data.success) {
         const { nombre_subcuenta, status_subcuenta, borrador_subcuenta } = response.data.data;
         setNombreSubcuenta(nombre_subcuenta);
@@ -164,8 +150,8 @@ function AgregarSubcuenta() {
         borrador_subcuenta: borradorSubcuenta === 'Habilitado',
       };
 
-      const response = await axios.put(
-        `http://localhost:3100/api/subcuenta-armonizada/update-subcuenta/${editingId}`,
+      const response = await axiosInstance.put(
+        `/subcuenta-armonizada/update-subcuenta/${editingId}`,
         body
       );
 
@@ -190,19 +176,13 @@ function AgregarSubcuenta() {
               text: 'La subcuenta se ha actualizado exitosamente.',
             });
 
-            // Actualizar la lista de subcuentas
             setSubcuentas((prev) =>
               prev.map((subcuenta) =>
                 subcuenta.id_subcuenta === editingId ? { ...subcuenta, ...body } : subcuenta
               )
             );
 
-            // Resetear el formulario
-            setNombreSubcuenta('');
-            setStatusSubcuenta('');
-            setBorradorSubcuenta('');
-            setEditingId(null);
-            setOriginalData({});
+            resetForm();
           }
         });
       } else {
@@ -219,6 +199,15 @@ function AgregarSubcuenta() {
         text: error.message || 'Error desconocido.',
       });
     }
+  };
+
+  // Restablecer el formulario
+  const resetForm = () => {
+    setNombreSubcuenta('');
+    setStatusSubcuenta('');
+    setBorradorSubcuenta('');
+    setEditingId(null);
+    setOriginalData({});
   };
 
   return (

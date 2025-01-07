@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../../../config/axios.config'; // Importar instancia personalizada de Axios
 import { TailSpin } from 'react-loader-spinner'; // Spinner para animación de carga
 import Swal from 'sweetalert2'; // Notificaciones
 import styles from './AgregarTipoPosesion.module.css';
@@ -23,9 +23,7 @@ function AgregarTipoPosesion() {
   useEffect(() => {
     const fetchPosesiones = async () => {
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/tipo-posesion/get-posesiones`
-        );
+        const response = await axiosInstance.get('/tipo-posesion/get-posesiones');
         if (response.data.success) {
           setPosesiones(response.data.data);
         } else {
@@ -50,10 +48,7 @@ function AgregarTipoPosesion() {
         status_posesion: statusPosesion,
       };
 
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/tipo-posesion/create-posesion`,
-        body
-      );
+      const response = await axiosInstance.post('/tipo-posesion/create-posesion', body);
 
       if (response.data.success) {
         Swal.fire({
@@ -81,7 +76,7 @@ function AgregarTipoPosesion() {
     }
   };
 
-  // Función para eliminar un tipo de posesion con confirmación
+  // Función para eliminar un tipo de posesión con confirmación
   const handleDeleteTipoPosesion = async (id) => {
     Swal.fire({
       title: '¿Está seguro?',
@@ -93,9 +88,7 @@ function AgregarTipoPosesion() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const response = await axios.delete(
-            `${import.meta.env.VITE_API_URL}/tipo-posesion/delete-posesion/${id}`
-          );
+          const response = await axiosInstance.delete(`/tipo-posesion/delete-posesion/${id}`);
 
           if (response.data.success) {
             Swal.fire({
@@ -107,7 +100,9 @@ function AgregarTipoPosesion() {
             });
 
             // Actualizar la lista de posesiones
-            setPosesiones(posesiones.filter((posesion) => posesion.id_tipo_posesion !== id));
+            setPosesiones((prev) =>
+              prev.filter((posesion) => posesion.id_tipo_posesion !== id)
+            );
           } else {
             Swal.fire({
               icon: 'error',
@@ -129,9 +124,7 @@ function AgregarTipoPosesion() {
   // Función para iniciar la edición de una posesión
   const handleEditPosesion = async (id) => {
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/tipo-posesion/get-posesion/${id}`
-      );
+      const response = await axiosInstance.get(`/tipo-posesion/get-posesion/${id}`);
       if (response.data.success) {
         const { descripcion_posesion, clave_posesion, status_posesion } = response.data.data;
         setDescripcionPosesion(descripcion_posesion);
@@ -164,8 +157,8 @@ function AgregarTipoPosesion() {
         status_posesion: statusPosesion,
       };
 
-      const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/tipo-posesion/update-posesion/${editingId}`,
+      const response = await axiosInstance.put(
+        `/tipo-posesion/update-posesion/${editingId}`,
         body
       );
 

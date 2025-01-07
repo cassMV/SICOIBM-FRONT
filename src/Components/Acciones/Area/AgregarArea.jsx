@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { TailSpin } from 'react-loader-spinner';
-import axios from 'axios';
+import axiosInstance from '../../../config/axios.config.js'; // Importa la instancia configurada
 import Swal from 'sweetalert2'; // Importar SweetAlert
 import styles from './AgregarArea.module.css';
 
@@ -19,7 +19,7 @@ const AgregarArea = () => {
   useEffect(() => {
     const fetchAreas = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/area/get-areas`);
+        const response = await axiosInstance.get('/area/get-areas');
         if (response.data.success) {
           setAreas(response.data.data);
         } else {
@@ -46,7 +46,7 @@ const AgregarArea = () => {
     }
 
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/area/create-area`, {
+      const response = await axiosInstance.post('/area/create-area', {
         nombre_area: nombreArea,
       });
 
@@ -90,9 +90,7 @@ const AgregarArea = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const response = await axios.delete(
-            `${import.meta.env.VITE_API_URL}/area/delete-area/${id}`
-          );
+          const response = await axiosInstance.delete(`/area/delete-area/${id}`);
 
           if (response.data.success) {
             Swal.fire({
@@ -126,9 +124,7 @@ const AgregarArea = () => {
   // Función para iniciar la edición de un área
   const handleEditArea = async (id) => {
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/area/get-area/${id}`
-      );
+      const response = await axiosInstance.get(`/area/get-area/${id}`);
       if (response.data.success) {
         setNombreArea(response.data.data.nombre_area);
         setEditingId(id);
@@ -156,10 +152,7 @@ const AgregarArea = () => {
         nombre_area: nombreArea,
       };
 
-      const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/area/update-area/${editingId}`,
-        body
-      );
+      const response = await axiosInstance.put(`/area/update-area/${editingId}`, body);
 
       if (response.data.success) {
         const changes = Object.entries(body)
@@ -229,7 +222,7 @@ const AgregarArea = () => {
           </div>
         </div>
         <div className={styles.agregarAreaFormActions}>
-          <button className={styles.agregarAreaBackButtonAction} onClick={() => navigate('/menu')}>
+          <button className={styles.agregarAreaBackButtonAction} onClick={() => navigate('/')}>
             Atrás
           </button>
           {editingId ? (

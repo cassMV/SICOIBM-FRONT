@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../../../config/axios.config'; // Importar instancia personalizada de Axios
 import { TailSpin } from 'react-loader-spinner'; // Spinner para animación de carga
 import Swal from 'sweetalert2'; // Notificaciones
 import styles from './AgregarTipoAlta.module.css';
@@ -22,9 +22,7 @@ function AgregarTipoAlta() {
   useEffect(() => {
     const fetchTiposAlta = async () => {
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/tipo-alta/get-tipos-alta`
-        );
+        const response = await axiosInstance.get('/tipo-alta/get-tipos-alta');
         if (response.data.success) {
           setTiposAlta(response.data.data);
         } else {
@@ -49,10 +47,7 @@ function AgregarTipoAlta() {
   // Función para enviar los datos del formulario
   const handleAddTipoAlta = async () => {
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/tipo-alta/create-tipo-alta`,
-        formData
-      );
+      const response = await axiosInstance.post('/tipo-alta/create-tipo-alta', formData);
 
       if (response.data.success) {
         Swal.fire({
@@ -81,9 +76,7 @@ function AgregarTipoAlta() {
   // Cargar datos para edición
   const handleEditTipoAlta = async (id) => {
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/tipo-alta/get-tipo-alta/${id}`
-      );
+      const response = await axiosInstance.get(`/tipo-alta/get-tipo-alta/${id}`);
       if (response.data.success) {
         setFormData(response.data.data); // Rellenar el formulario
         setOriginalData(response.data.data); // Guardar los datos originales
@@ -108,8 +101,8 @@ function AgregarTipoAlta() {
   // Guardar cambios en el tipo de alta
   const handleSaveChanges = async () => {
     try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/tipo-alta/update-tipo-alta/${selectedTipoAltaId}`,
+      const response = await axiosInstance.put(
+        `/tipo-alta/update-tipo-alta/${selectedTipoAltaId}`,
         formData
       );
 
@@ -177,9 +170,7 @@ function AgregarTipoAlta() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const response = await axios.delete(
-            `${import.meta.env.VITE_API_URL}/tipo-alta/delete-tipo-alta/${id}`
-          );
+          const response = await axiosInstance.delete(`/tipo-alta/delete-tipo-alta/${id}`);
 
           if (response.data.success) {
             Swal.fire({

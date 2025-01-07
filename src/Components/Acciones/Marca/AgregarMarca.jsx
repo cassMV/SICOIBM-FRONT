@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../../../config/axios.config'; // Asegúrate de importar tu configuración de Axios
 import { TailSpin } from 'react-loader-spinner'; // Spinner para animación de carga
 import Swal from 'sweetalert2'; // Notificaciones
 import styles from './AgregarMarca.module.css';
@@ -23,9 +23,7 @@ function AgregarMarca() {
   useEffect(() => {
     const fetchMarcas = async () => {
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/marca/get-marcas`
-        );
+        const response = await axiosInstance.get('/marca/get-marcas');
         if (response.data.success) {
           setMarcas(response.data.data);
         } else {
@@ -50,10 +48,7 @@ function AgregarMarca() {
   // Agregar nueva marca
   const handleAddMarca = async () => {
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/marca/create-marca`,
-        formData
-      );
+      const response = await axiosInstance.post('/marca/create-marca', formData);
 
       if (response.data.success) {
         Swal.fire({
@@ -85,9 +80,7 @@ function AgregarMarca() {
   // Manejar edición de marca
   const handleEditMarca = async (id) => {
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/marca/get-marca/${id}`
-      );
+      const response = await axiosInstance.get(`/marca/get-marca/${id}`);
       if (response.data.success) {
         const marca = response.data.data;
         setFormData({
@@ -116,8 +109,8 @@ function AgregarMarca() {
   // Guardar cambios en una marca editada
   const handleSaveChanges = async () => {
     try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/marca/update-marca/${selectedMarcaId}`,
+      const response = await axiosInstance.put(
+        `/marca/update-marca/${selectedMarcaId}`,
         formData
       );
 
@@ -230,7 +223,6 @@ function AgregarMarca() {
           )}
         </div>
 
-        {/* Spinner o tabla de marcas */}
         {isLoading ? (
           <div className={styles.spinnerContainer}>
             <TailSpin height="80" width="80" color="red" ariaLabel="loading" />
@@ -265,9 +257,9 @@ function AgregarMarca() {
                           className={`${styles.actionButton} ${styles.deleteButton}`}
                           onClick={() =>
                             Swal.fire({
-                              icon: "info",
-                              title: "Función no implementada",
-                              text: "La eliminación de marcas aún no está disponible.",
+                              icon: 'info',
+                              title: 'Función no implementada',
+                              text: 'La eliminación de marcas aún no está disponible.',
                             })
                           }
                         >

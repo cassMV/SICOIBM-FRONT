@@ -1,15 +1,14 @@
-.agregarUsuarioContainer {
+.agregarBajaContainer {
     display: flex;
     flex-direction: column;
     height: 100vh;
     background-color: #e5e5e5;
     font-family: 'Times New Roman';
-    width: 0vw;
+    width: 100vw;
     box-sizing: border-box;
-    margin-left: 240px;
   }
   
-  .agregarUsuarioMainContent {
+  .agregarBajaMainContent {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -19,17 +18,17 @@
     top: 15%;
     width: 80%;
     text-align: center;
-    margin-left: 0px;
+    margin-left: 250px;
     font-family: 'Times New Roman';
   }
   
-  .agregarUsuarioTitle {
+  .agregarBajaTitle {
     font-size: 30px;
     font-weight: bold;
     margin-top: 25px;
   }
   
-  .agregarUsuarioFormContainer {
+  .agregarBajaFormContainer {
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -37,13 +36,13 @@
     gap: 20px;
   }
   
-  .agregarUsuarioFormRow {
+  .agregarBajaFormRow {
     display: flex;
     justify-content: space-between;
     gap: 10px;
   }
   
-  .agregarUsuarioInput {
+  .agregarBajaInput {
     padding: 10px;
     border: 1px solid #a12d2f;
     border-radius: 5px;
@@ -51,32 +50,31 @@
     margin-right: 20px;
   }
   
-  .agregarUsuarioInput2 {
+  .agregarBajaInput2 {
     width: 250px; /* Ancho fijo */
     padding: 10px;
     border: 1px solid #a12d2f;
     border-radius: 5px;
     margin-right: 20px;
   }
-  
-  .agregarUsuarioSelect {
+
+  .agregarBajaSelect {
     padding: 10px;
     border: 1px solid #a12d2f;
     border-radius: 5px;
     width: 100%;
-    margin-right: 20px;
   }
-  
-  .agregarUsuarioFormActions {
+
+  .agregarBajaFormActions {
     display: flex;
     justify-content: center;
     width: 100%;
     margin-top: 20px;
   }
   
-  .agregarUsuarioBackButtonAction,
-  .agregarUsuarioAddButton,
-  .agregarUsuarioSaveButton {
+  .agregarBajaBackButtonAction,
+  .agregarBajaAddButton,
+  .agregarBajaSaveButton {
     padding: 10px 20px;
     background-color: gray;
     color: white;
@@ -86,26 +84,41 @@
     margin: 0 10px;
   }
   
-  .agregarUsuarioHomeButton {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background-color: #333;
-    color: white;
-    font-size: 24px;
-    border: none;
-    border-radius: 50%;
-    width: 50px;
-    height: 50px;
-    cursor: pointer;
-    z-index: 1000;
+  .agregarBajaHomeButton {
+    position: fixed; /* Fija el botón a la ventana del navegador */
+    bottom: 20px; /* Alinea a 20px desde la parte inferior */
+    right: 20px; /* Alinea a 20px desde la parte derecha */
+    background-color: #333; /* Fondo gris oscuro */
+    color: white; /* Texto blanco */
+    font-size: 24px; /* Tamaño del texto */
+    border: none; /* Sin borde */
+    border-radius: 50%; /* Botón circular */
+    width: 50px; /* Ancho del botón */
+    height: 50px; /* Alto del botón */
+    cursor: pointer; /* Cambia el cursor a puntero al pasar el mouse */
+    z-index: 1000; /* Asegura que esté por encima de otros elementos */
   }
-  
-  .agregarUsuarioHomeButton:hover {
+
+  .agregarDocumentoHomeButton:hover {
     background-color: #555;
   }
   
-  .usuarioTable {
+  /* Animación fadeIn */
+@keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  .fadeIn {
+    animation: fadeIn 0.5s ease-in; /* Animación de entrada */
+  }
+
+/* Tabla */
+.bajaTable {
     width: 100%;
     border-collapse: collapse;
     margin: 20px 0;
@@ -114,32 +127,33 @@
     background-color: #f9f9f9;
   }
   
-  .usuarioTable th,
-  .usuarioTable td {
+  .bajaTable th,
+  .bajaTable td {
     border: 1px solid #a12d2f;
     padding: 12px;
   }
   
-  .usuarioTable th {
+  .bajaTable th {
     background-color: #a12d2f;
     color: white;
     font-weight: bold;
     text-align: center;
   }
   
-  .usuarioTable td {
+  .bajaTable td {
     text-align: center;
   }
   
-  .usuarioTable tr:nth-child(even) {
+  .bajaTable tr:nth-child(even) {
     background-color: #f2f2f2;
   }
   
-  .usuarioTable tr:hover {
+  .bajaTable tr:hover {
     background-color: #e0e0e0;
   }
-
-  .buttonGroup {
+  
+/* Botones de acciones */
+.buttonGroup {
     display: flex;
     gap: 5px;
     justify-content: center;
@@ -176,6 +190,7 @@
     background-color: #c82333;
   }
   
+  /* Iconos dentro de los botones */
   .material-icons {
     font-size: 20px;
     vertical-align: middle;

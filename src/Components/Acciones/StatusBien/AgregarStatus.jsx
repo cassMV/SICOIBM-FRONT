@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../../../config/axios.config'; // Importar la instancia personalizada
 import { TailSpin } from 'react-loader-spinner'; // Spinner para animación de carga
 import Swal from 'sweetalert2'; // Notificaciones
 import styles from './AgregarStatus.module.css';
@@ -21,9 +21,7 @@ const AgregarStatus = () => {
   useEffect(() => {
     const fetchStatusBien = async () => {
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/status-bien/get-status-bien`
-        );
+        const response = await axiosInstance.get('/status-bien/get-status-bien');
         if (response.data.success) {
           setStatusBien(response.data.data);
         } else {
@@ -48,10 +46,7 @@ const AgregarStatus = () => {
   // Función para enviar los datos del formulario (Agregar Status)
   const handleAddStatus = async () => {
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/status-bien/create-status-bien`,
-        formData
-      );
+      const response = await axiosInstance.post('/status-bien/create-status-bien', formData);
 
       if (response.data.success) {
         Swal.fire({
@@ -80,9 +75,7 @@ const AgregarStatus = () => {
   // Función para cargar datos de status en formulario para edición
   const handleEditStatus = async (id) => {
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/status-bien/get-status-bien/${id}`
-      );
+      const response = await axiosInstance.get(`/status-bien/get-status-bien/${id}`);
       if (response.data.success) {
         const status = response.data.data;
         setFormData({ descripcion_status: status.descripcion_status });
@@ -99,8 +92,8 @@ const AgregarStatus = () => {
   // Función para guardar cambios de un status editado
   const handleSaveChanges = async () => {
     try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/status-bien/update-status-bien/${editingStatus}`,
+      const response = await axiosInstance.put(
+        `/status-bien/update-status-bien/${editingStatus}`,
         formData
       );
 
@@ -153,51 +146,6 @@ const AgregarStatus = () => {
         text: error.message || 'Error desconocido.',
       });
     }
-  };
-
-  // Función para eliminar un status con confirmación
-  const handleDeleteStatus = async (id) => {
-    Swal.fire({
-      title: '¿Está seguro?',
-      text: 'Esta acción eliminará el status permanentemente.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          const response = await axios.delete(
-            `${import.meta.env.VITE_API_URL}/status-bien/delete-status-bien/${id}`
-          );
-
-          if (response.data.success) {
-            Swal.fire({
-              icon: 'success',
-              title: 'Status eliminado',
-              text: 'El status se ha eliminado exitosamente.',
-              timer: 2000,
-              showConfirmButton: false,
-            });
-
-            // Actualizar la lista de status
-            setStatusBien(statusBien.filter((status) => status.id_status_bien !== id));
-          } else {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: response.data.message || 'No se pudo eliminar el status.',
-            });
-          }
-        } catch (error) {
-          Swal.fire({
-            icon: 'error',
-            title: 'Error en el servidor',
-            text: error.message || 'Ocurrió un error al intentar eliminar el status.',
-          });
-        }
-      }
-    });
   };
 
   return (

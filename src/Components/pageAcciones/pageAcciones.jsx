@@ -14,6 +14,7 @@ import AgregarCodigo from "../Acciones/CodigoPartida/AgregarCodigo.jsx";
 import AgregarSubcuenta from "../Acciones/SubcuentaArmonizada/AgregarSubcuenta.jsx";
 import AgregarRecurso from "../Acciones/RecursoOrigen/AgregarRecurso.jsx";
 import AgregarTipoPosesion from "../Acciones/TipoPosesion/AgregarTipoPosesion.jsx";
+import AgregarBien2 from "../Acciones/Bien2/AgregarBien2.jsx";
 
 const Acciones = () => {
   return (
@@ -25,6 +26,7 @@ const Acciones = () => {
       <div style={{ flex: 1, padding: "20px" }}>
         <Routes>
         <Route path="bien" element={<AgregarBien />} />
+        <Route path="bien2" element={<AgregarBien2 />} />
         <Route path="area" element={<AgregarArea />} />
         <Route path="empleado" element={<AgregarEmpleado />} />
         <Route path="producto" element={<AgregarProducto />} />

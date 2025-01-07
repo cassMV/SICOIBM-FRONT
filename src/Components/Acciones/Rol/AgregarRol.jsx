@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../../../config/axios.config'; // Importar la instancia personalizada
 import { TailSpin } from 'react-loader-spinner'; // Spinner para animación de carga
 import Swal from 'sweetalert2'; // Notificaciones
 import styles from './AgregarRol.module.css';
@@ -22,9 +22,7 @@ const AgregarRol = () => {
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/rol/get-roles`
-        );
+        const response = await axiosInstance.get('/rol/get-roles');
         if (response.data.success) {
           setRoles(response.data.data);
         } else {
@@ -49,10 +47,7 @@ const AgregarRol = () => {
   // Función para enviar los datos del formulario (Agregar Rol)
   const handleAddRol = async () => {
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/rol/create-rol`,
-        formData
-      );
+      const response = await axiosInstance.post('/rol/create-rol', formData);
 
       if (response.data.success) {
         Swal.fire({
@@ -84,9 +79,7 @@ const AgregarRol = () => {
   // Función para cargar datos de rol en formulario para edición
   const handleEditRol = async (id) => {
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/rol/get-rol/${id}`
-      );
+      const response = await axiosInstance.get(`/rol/get-rol/${id}`);
       if (response.data.success) {
         const rol = response.data.data;
         setFormData({
@@ -109,8 +102,8 @@ const AgregarRol = () => {
   // Función para guardar cambios de un rol editado
   const handleSaveChanges = async () => {
     try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/rol/update-rol/${editingRol}`,
+      const response = await axiosInstance.put(
+        `/rol/update-rol/${editingRol}`,
         formData
       );
 
@@ -138,9 +131,7 @@ const AgregarRol = () => {
             // Actualiza la lista de roles
             setRoles((prev) =>
               prev.map((rol) =>
-                rol.id_rol === editingRol
-                  ? { ...rol, ...formData }
-                  : rol
+                rol.id_rol === editingRol ? { ...rol, ...formData } : rol
               )
             );
 
@@ -166,51 +157,6 @@ const AgregarRol = () => {
         text: error.message || 'Error desconocido.',
       });
     }
-  };
-
-  // Función para eliminar un rol con confirmación
-  const handleDeleteRol = async (id) => {
-    Swal.fire({
-      title: '¿Está seguro?',
-      text: 'Esta acción eliminará el rol permanentemente.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar',
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          const response = await axios.delete(
-            `${import.meta.env.VITE_API_URL}/rol/delete-rol/${id}`
-          );
-
-          if (response.data.success) {
-            Swal.fire({
-              icon: 'success',
-              title: 'Rol eliminado',
-              text: 'El rol se ha eliminado exitosamente.',
-              timer: 2000,
-              showConfirmButton: false,
-            });
-
-            // Actualizar la lista de roles
-            setRoles(roles.filter((rol) => rol.id_rol !== id));
-          } else {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: response.data.message || 'No se pudo eliminar el rol.',
-            });
-          }
-        } catch (error) {
-          Swal.fire({
-            icon: 'error',
-            title: 'Error en el servidor',
-            text: error.message || 'Ocurrió un error al intentar eliminar el rol.',
-          });
-        }
-      }
-    });
   };
 
   return (

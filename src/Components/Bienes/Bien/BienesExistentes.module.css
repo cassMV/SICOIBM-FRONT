@@ -121,7 +121,7 @@
 /* Título de la tabla */
 .tableTitle {
   margin-top: 20px;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: bold;
   color: #333;
   text-align: left;
@@ -132,7 +132,7 @@
   width: 100%;
   border-collapse: collapse;
   margin: 20px 0;
-  font-size: 13px;
+  font-size: 11px;
   text-align: left;
   background-color: #f9f9f9;
 }

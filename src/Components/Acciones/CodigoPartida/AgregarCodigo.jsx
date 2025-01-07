@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosInstance from '../../../config/axios.config'; // Importa la instancia configurada de Axios
 import { TailSpin } from 'react-loader-spinner'; // Spinner para animación de carga
 import Swal from 'sweetalert2'; // Notificaciones
 import styles from './AgregarCodigo.module.css';
@@ -26,9 +26,7 @@ function AgregarCodigo() {
   useEffect(() => {
     const fetchPartidas = async () => {
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/codigo-partida-especifica/get-partidas`
-        );
+        const response = await axiosInstance.get('/codigo-partida-especifica/get-partidas');
         if (response.data.success) {
           setPartidas(response.data.data);
         } else {
@@ -48,9 +46,7 @@ function AgregarCodigo() {
   useEffect(() => {
     const fetchSubcuentas = async () => {
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/subcuenta-armonizada/get-subcuentas`
-        );
+        const response = await axiosInstance.get('/subcuenta-armonizada/get-subcuentas');
         if (response.data.success) {
           setSubcuentas(response.data.data);
         } else {
@@ -76,10 +72,7 @@ function AgregarCodigo() {
   // Función para enviar los datos del formulario
   const handleAddPartida = async () => {
     try {
-      const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/codigo-partida-especifica/create-partida`,
-        formData
-      );
+      const response = await axiosInstance.post('/codigo-partida-especifica/create-partida', formData);
 
       if (response.data.success) {
         Swal.fire({
@@ -114,9 +107,7 @@ function AgregarCodigo() {
   // Función para cargar los datos de una partida en el formulario para edición
   const handleEditPartida = async (id) => {
     try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/codigo-partida-especifica/get-partida/${id}`
-      );
+      const response = await axiosInstance.get(`/codigo-partida-especifica/get-partida/${id}`);
       if (response.data.success) {
         const partida = response.data.data;
         setFormData({
@@ -147,63 +138,35 @@ function AgregarCodigo() {
   // Función para guardar los cambios de una partida editada
   const handleSaveChanges = async () => {
     try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/codigo-partida-especifica/update-partida/${selectedPartidaId}`,
+      const response = await axiosInstance.put(
+        `/codigo-partida-especifica/update-partida/${selectedPartidaId}`,
         formData
       );
 
       if (response.data.success) {
-        // Filtrar solo los cambios realizados
-        const originalPartida = partidas.find(
-          (partida) => partida.id_partida === selectedPartidaId
-        );
-        const cambios = Object.entries(formData)
-          .filter(([key, value]) => originalPartida[key] !== value)
-          .map(([key, value]) => {
-            const displayValue =
-              key === 'id_subcuenta'
-                ? subcuentas.find((s) => s.id_subcuenta === value)?.nombre_subcuenta || value
-                : value;
-            return `<p><b>${key}:</b> ${originalPartida[key]} → ${displayValue}</p>`;
-          })
-          .join('');
-
         Swal.fire({
-          title: 'Confirmar Cambios',
-          html: cambios,
-          icon: 'info',
-          showCancelButton: true,
-          confirmButtonText: 'Guardar',
-          cancelButtonText: 'Cancelar',
-        }).then((result) => {
-          if (result.isConfirmed) {
-            Swal.fire({
-              icon: 'success',
-              title: 'Cambios guardados',
-              text: 'La partida se ha actualizado exitosamente.',
-            });
-
-            // Actualizar la lista de partidas
-            setPartidas((prev) =>
-              prev.map((partida) =>
-                partida.id_partida === selectedPartidaId
-                  ? { ...partida, ...formData }
-                  : partida
-              )
-            );
-
-            // Resetear formulario
-            setFormData({
-              codigo_partida: '',
-              nombre_partida: '',
-              borrador_partida: false,
-              status_partida: '',
-              id_subcuenta: '',
-            });
-            setEditMode(false);
-            setSelectedPartidaId(null);
-          }
+          icon: 'success',
+          title: 'Cambios guardados',
+          text: 'La partida se ha actualizado exitosamente.',
         });
+
+        // Actualizar la lista de partidas
+        setPartidas((prev) =>
+          prev.map((partida) =>
+            partida.id_partida === selectedPartidaId ? { ...partida, ...formData } : partida
+          )
+        );
+
+        // Resetear formulario
+        setFormData({
+          codigo_partida: '',
+          nombre_partida: '',
+          borrador_partida: false,
+          status_partida: '',
+          id_subcuenta: '',
+        });
+        setEditMode(false);
+        setSelectedPartidaId(null);
       } else {
         Swal.fire({
           icon: 'error',
@@ -220,11 +183,11 @@ function AgregarCodigo() {
     }
   };
 
-  // Función para eliminar un codigo con confirmación
+  // Función para eliminar un código con confirmación
   const handleDeleteCodigo = async (id) => {
     Swal.fire({
       title: '¿Está seguro?',
-      text: 'Esta acción eliminará el codigo permanentemente.',
+      text: 'Esta acción eliminará el código permanentemente.',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Sí, eliminar',
@@ -232,15 +195,15 @@ function AgregarCodigo() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const response = await axios.delete(
-            `${import.meta.env.VITE_API_URL}/codigo-partida-especifica/delete-partida/${id}`
+          const response = await axiosInstance.delete(
+            `/codigo-partida-especifica/delete-partida/${id}`
           );
 
           if (response.data.success) {
             Swal.fire({
               icon: 'success',
-              title: 'Codigo eliminado',
-              text: 'El codigo se ha eliminado exitosamente.',
+              title: 'Código eliminado',
+              text: 'El código se ha eliminado exitosamente.',
               timer: 2000,
               showConfirmButton: false,
             });
@@ -251,14 +214,14 @@ function AgregarCodigo() {
             Swal.fire({
               icon: 'error',
               title: 'Error',
-              text: response.data.message || '            No se pudo eliminar el Codigo de partida.',
+              text: response.data.message || 'No se pudo eliminar el código de partida.',
             });
           }
         } catch (error) {
           Swal.fire({
             icon: 'error',
             title: 'Error en el servidor',
-            text: error.message || 'Ocurrió un error al intentar eliminar el codigo de partida.',
+            text: error.message || 'Ocurrió un error al intentar eliminar el código de partida.',
           });
         }
       }
@@ -300,14 +263,16 @@ function AgregarCodigo() {
             </label>
           </div>
           <div className={styles.agregarBajaBienFormRow}>
-            <input
-              type="text"
-              placeholder="Status Partida"
+            <select
               className={styles.agregarCodigoInput}
               name="status_partida"
               value={formData.status_partida}
               onChange={handleInputChange}
-            />
+            >
+              <option value="">Status del Código</option>
+              <option value="Activo">Activo</option>
+              <option value="Inactivo">Inactivo</option>
+            </select>
             {/* Select para Subcuenta Armonizada */}
             <select
               className={styles.agregarCodigoInput}
@@ -400,6 +365,13 @@ function AgregarCodigo() {
           </>
         )}
       </main>
+      {/* Botón para ir al Home (opcional) */}
+      <button
+        className={styles.agregarCodigoHomeButton}
+        onClick={() => navigate('/')}
+      >
+        🏠
+      </button>
     </div>
   );
 }
