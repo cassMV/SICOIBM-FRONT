@@ -1,102 +1,147 @@
+/* Contenedor principal */
 .agregarProductoContainer {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    background-color: #e5e5e5;
-    font-family: 'Times New Roman';
-    width: 100vw;
-    box-sizing: border-box;
-  }
-  
-  .agregarProductoMainContent {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    padding: 0px;
-    position: absolute;
-    top: 15%;
-    width: 80%;
-    text-align: center;
-    margin-left: 250px;
-    font-family: 'Times New Roman';
-  }
-  
-  .agregarProductoTitle {
-    font-size: 30px;
-    font-weight: bold;
-    margin-top: 25px;
-  }
-  
-  .agregarProductoFormContainer {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    max-width: 1200px;
-    gap: 20px;
-  }
-  
-  .agregarProductoFormRow {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-  }
-  
-  .agregarProductoInput {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid #a12d2f;
-    border-radius: 5px;
-    margin-right: 20px;
-  }
-  
-  .agregarProductoInput2 {
-    width: 250px;
-    padding: 10px;
-    border: 1px solid #a12d2f;
-    border-radius: 5px;
-    margin-right: 20px;
-  }
-  
-  .agregarProductoFormActions {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    margin-top: 20px;
-  }
-  
-  .agregarProductoBackButtonAction,
-  .agregarProductoAddButton,
-  .agregarProductoAddButton {
-    padding: 10px 20px;
-    background-color: gray;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    margin: 0 10px;
-  }
-  
-  .agregarProductoHomeButton {
-    position: fixed; /* Fija el botón a la ventana del navegador */
-    bottom: 20px; /* Alinea a 20px desde la parte inferior */
-    right: 20px; /* Alinea a 20px desde la parte derecha */
-    background-color: #333; /* Fondo gris oscuro */
-    color: white; /* Texto blanco */
-    font-size: 24px; /* Tamaño del texto */
-    border: none; /* Sin borde */
-    border-radius: 50%; /* Botón circular */
-    width: 50px; /* Ancho del botón */
-    height: 50px; /* Alto del botón */
-    cursor: pointer; /* Cambia el cursor a puntero al pasar el mouse */
-    z-index: 1000; /* Asegura que esté por encima de otros elementos */
-  }
-  
-  .agregarProductoHomeButton:hover {
-    background-color: #555;
-  }
-  
-  /* Animación fadeIn */
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background-color: #e5e5e5;
+  font-family: 'Times New Roman';
+  width: 100vw;
+  box-sizing: border-box;
+}
+
+/* Contenido principal */
+.agregarProductoMainContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0px;
+  position: absolute;
+  top: 15%;
+  width: 80%;
+  text-align: center;
+  margin-left: 250px;
+  font-family: 'Times New Roman';
+}
+
+/* Título principal */
+.agregarProductoTitle {
+  font-size: 30px;
+  font-weight: bold;
+  margin-top: 25px;
+}
+
+/* Contenedor del formulario */
+.agregarProductoFormContainer {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1200px;
+  gap: 20px;
+}
+
+/* Filas del formulario */
+.agregarProductoFormRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+/* Inputs generales */
+.agregarProductoInput {
+  flex: 1;
+  height: 40px; /* Altura consistente */
+  line-height: normal; /* Asegura que el texto no expanda el input */
+  padding: 10px;
+  font-size: 16px; /* Tamaño de fuente uniforme */
+  border: 1px solid #a12d2f;
+  border-radius: 5px;
+  resize: none; /* Evitar redimensionar inputs */
+  box-sizing: border-box; /* Incluir padding y border en las dimensiones */
+}
+
+.agregarProductoInput2 {
+  width: 250px;
+  padding: 10px;
+  border: 1px solid #a12d2f;
+  border-radius: 5px;
+}
+
+/* Contenedor para el input de archivo e imagen */
+.imageInputContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px; /* Separar la imagen del input */
+}
+
+/* Input de archivo */
+.imageInputContainer input[type="file"] {
+  height: auto; /* Permitir altura dinámica */
+  padding: 5px;
+  font-size: 14px;
+  background-color: #fff;
+  cursor: pointer;
+  border: 1px solid #a12d2f;
+  border-radius: 5px;
+}
+
+/* Vista previa de la imagen */
+.imagePreview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.imagePreviewThumbnail {
+  width: 100px;
+  height: 100px;
+  object-fit: cover; /* Ajustar la imagen dentro del contenedor */
+  border: 1px solid #a12d2f;
+  border-radius: 5px;
+  margin-bottom: 5px;
+}
+
+/* Botones de formulario */
+.agregarProductoFormActions {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-top: 20px;
+}
+
+.agregarProductoBackButtonAction,
+.agregarProductoAddButton {
+  padding: 10px 20px;
+  background-color: gray;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin: 0 10px;
+}
+
+/* Botón de navegación */
+.agregarProductoHomeButton {
+  position: fixed; /* Fija el botón a la ventana del navegador */
+  bottom: 20px; /* Alinea a 20px desde la parte inferior */
+  right: 20px; /* Alinea a 20px desde la parte derecha */
+  background-color: #333; /* Fondo gris oscuro */
+  color: white; /* Texto blanco */
+  font-size: 24px; /* Tamaño del texto */
+  border: none; /* Sin borde */
+  border-radius: 50%; /* Botón circular */
+  width: 50px; /* Ancho del botón */
+  height: 50px; /* Alto del botón */
+  cursor: pointer; /* Cambia el cursor a puntero al pasar el mouse */
+  z-index: 1000; /* Asegura que esté por encima de otros elementos */
+}
+
+.agregarProductoHomeButton:hover {
+  background-color: #555;
+}
+
+/* Animación de entrada */
 @keyframes fadeIn {
   from {
     opacity: 0;
