@@ -23,6 +23,9 @@ const AgregarEmpleado = () => {
   const [editMode, setEditMode] = useState(false);
   const [selectedEmpleadoId, setSelectedEmpleadoId] = useState(null);
   const [originalData, setOriginalData] = useState({});
+  // Agregar el estado para el término de búsqueda y los resultados filtrados
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filteredEmpleados, setFilteredEmpleados] = useState([]);
 
   // Obtener empleados
   useEffect(() => {
@@ -31,6 +34,7 @@ const AgregarEmpleado = () => {
         const response = await axiosInstance.get("/empleado/get-empleados");
         if (response.data.success) {
           setEmpleados(response.data.data);
+          setFilteredEmpleados(response.data.data);
         }
       } catch (error) {
         console.error("Error al obtener los empleados:", error);
@@ -188,6 +192,70 @@ const AgregarEmpleado = () => {
     }
   };
 
+  // Funcion para paginacion
+  const recordsPerPage = 15;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(filteredEmpleados.length / recordsPerPage);
+
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const currentData = filteredEmpleados.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
+
+   // Función para manejar la búsqueda en tiempo real
+  const handleSearch = (e) => {
+    const value = e.target.value;
+      setSearchTerm(value);
+
+      const results = empleados.filter(
+        (empleado) =>
+          empleado.nombre_empleado?.toLowerCase().includes(value.toLowerCase()) ||
+          empleado.rfc?.toLowerCase().includes(value.toLowerCase())
+      );
+    setFilteredEmpleados(value.trim() === "" ? empleados : results);
+  };
+
+  const handleGenerateExcel = async () => {
+    try {
+      const response = await axiosInstance.get(
+        "/excel/generar-excel?tabla=empleado",
+        {
+          responseType: "blob", // Para manejar archivos binarios
+        }
+      );
+
+      // Crear un enlace para descargar el archivo
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "reporte_bien.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      Swal.fire({
+        icon: "success",
+        title: "¡Éxito!",
+        text: "El archivo Excel ha sido generado y descargado.",
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo generar el archivo Excel.",
+      });
+      console.error("Error al generar el Excel:", error);
+    }
+  };
+
+
   return (
     <div className={styles.agregarEmpleadoContainer}>
       <main className={`${styles.agregarEmpleadoMainContent} ${styles.fadeIn}`}>
@@ -277,6 +345,31 @@ const AgregarEmpleado = () => {
               Agregar
             </button>
           )}
+          <button
+            className={styles.agregarAreaExcelButton}
+            onClick={handleGenerateExcel}
+          >
+            <img
+              src="/icon-excel.png" // Ruta relativa desde la carpeta public
+              alt="Ícono de Excel"
+              className={styles.excelIcon}
+            />
+          </button>
+
+        </div>
+
+        {/* Input de búsqueda */}
+        <div className={styles.agregarEmpleadoFormActions}>
+          <div className={styles.agregarEmpleadoSearchContainer}>
+            <input
+              type="text"
+              placeholder="Buscar por nombre o RFC"
+              className={styles.agregarEmpleadoSearchInput}
+              value={searchTerm}
+              onChange={handleSearch} 
+            />
+            <button className={styles.agregarEmpleadoSearchButton} onClick={handleSearch}>🔍</button>
+          </div>
         </div>
 
         {isLoading ? (
@@ -289,7 +382,6 @@ const AgregarEmpleado = () => {
             <table className={`${styles.empleadoTable} ${styles.fadeIn}`}>
               <thead>
                 <tr>
-                  <th>ID</th>
                   <th>Nombre</th>
                   <th>Correo</th>
                   <th>RFC</th>
@@ -300,9 +392,8 @@ const AgregarEmpleado = () => {
                 </tr>
               </thead>
               <tbody>
-                {empleados.map((empleado) => (
+                {currentData.map((empleado) => (
                   <tr key={empleado.id_empleado}>
-                    <td>{empleado.id_empleado}</td>
                     <td>{empleado.nombre_empleado}</td>
                     <td>{empleado.correo_electronico}</td>
                     <td>{empleado.rfc}</td>
@@ -335,12 +426,35 @@ const AgregarEmpleado = () => {
                 ))}
               </tbody>
             </table>
+            <div className={styles.pagination}>
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          &laquo;
+        </button>
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          <button
+            key={page}
+            onClick={() => handlePageChange(page)}
+            className={currentPage === page ? styles.active : ""}
+          >
+            {page}
+          </button>
+        ))}
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          &raquo;
+        </button>
+      </div>
           </>
         )}
       </main>
       <button
         className={styles.agregarEmpleadoHomeButton}
-        onClick={() => navigate('/')}
+        onClick={() => navigate('/menu')}
       >
         🏠
       </button>

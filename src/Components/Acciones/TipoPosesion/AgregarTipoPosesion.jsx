@@ -9,6 +9,8 @@ function AgregarTipoPosesion() {
   const navigate = useNavigate();
   const [posesiones, setPosesiones] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [filteredPosesiones, setFilteredPosesiones] = useState([]); // Posesiones filtradas
+  const [searchTerm, setSearchTerm] = useState(''); // Término de búsqueda
 
   // Estado del formulario
   const [descripcionPosesion, setDescripcionPosesion] = useState('');
@@ -26,6 +28,7 @@ function AgregarTipoPosesion() {
         const response = await axiosInstance.get('/tipo-posesion/get-posesiones');
         if (response.data.success) {
           setPosesiones(response.data.data);
+          setFilteredPosesiones(response.data.data); // Inicializar posesiones filtradas
         } else {
           console.error('Error:', response.data.message);
         }
@@ -214,6 +217,69 @@ function AgregarTipoPosesion() {
     }
   };
 
+  //Funcion para paginacion
+  const recordsPerPage = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(filteredPosesiones.length / recordsPerPage);
+
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const currentData = filteredPosesiones.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
+
+  // Función para manejar la búsqueda en tiempo real
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+
+    const results = posesiones.filter((posesion) =>
+      posesion.descripcion_posesion?.toLowerCase().includes(value.toLowerCase())
+    );
+
+    setFilteredPosesiones(value.trim() === '' ? posesiones : results);
+  };
+
+  const handleGenerateExcel = async () => {
+    try {
+      const response = await axiosInstance.get(
+        "/excel/generar-excel?tabla=tipoposesion",
+        {
+          responseType: "blob", // Para manejar archivos binarios
+        }
+      );
+
+      // Crear un enlace para descargar el archivo
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "reporte_tipo_posesion.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      Swal.fire({
+        icon: "success",
+        title: "¡Éxito!",
+        text: "El archivo Excel ha sido generado y descargado.",
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo generar el archivo Excel.",
+      });
+      console.error("Error al generar el Excel:", error);
+    }
+  };
+
+
   return (
     <div className={styles.agregarTipoPosesionContainer}>
       <main className={`${styles.agregarTipoPosesionMainContent} ${styles.fadeIn}`}>
@@ -269,6 +335,33 @@ function AgregarTipoPosesion() {
               Agregar
             </button>
           )}
+          <button
+            className={styles.agregarAreaExcelButton}
+            onClick={handleGenerateExcel}
+          >
+            <img
+              src="/icon-excel.png" // Ruta relativa desde la carpeta public
+              alt="Ícono de Excel"
+              className={styles.excelIcon}
+            />
+          </button>
+
+        </div>
+
+        {/* Campo de búsqueda */}
+        <div className={styles.agregarTipoPosesionFormActions}>
+          <div className={styles.agregarTipoPosesionSearchContainer}>
+            <input
+              type="text"
+              placeholder="Buscar por descripción de posesión"
+              className={styles.agregarTipoPosesionSearchInput}
+              value={searchTerm}
+              onChange={handleSearch} // Búsqueda en tiempo real
+            />
+            <button className={styles.agregarTipoPosesionSearchButton} disabled>
+              🔍
+            </button>
+          </div>
         </div>
 
         {isLoading ? (
@@ -281,7 +374,6 @@ function AgregarTipoPosesion() {
             <table className={`${styles.posesionTable} ${styles.fadeIn}`}>
               <thead>
                 <tr>
-                  <th>ID</th>
                   <th>Descripción</th>
                   <th>Clave</th>
                   <th>Status</th>
@@ -289,9 +381,8 @@ function AgregarTipoPosesion() {
                 </tr>
               </thead>
               <tbody>
-                {posesiones.map((posesion) => (
+                {currentData.map((posesion) => (
                   <tr key={posesion.id_tipo_posesion}>
-                    <td>{posesion.id_tipo_posesion}</td>
                     <td>{posesion.descripcion_posesion}</td>
                     <td>{posesion.clave_posesion}</td>
                     <td>{posesion.status_posesion}</td>
@@ -315,6 +406,29 @@ function AgregarTipoPosesion() {
                 ))}
               </tbody>
             </table>
+            <div className={styles.pagination}>
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          &laquo;
+        </button>
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          <button
+            key={page}
+            onClick={() => handlePageChange(page)}
+            className={currentPage === page ? styles.active : ""}
+          >
+            {page}
+          </button>
+        ))}
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          &raquo;
+        </button>
+      </div>
           </>
         )}
       </main>

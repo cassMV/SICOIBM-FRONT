@@ -13,6 +13,9 @@ function AgregarDocumento() {
   const [editMode, setEditMode] = useState(false);
   const [selectedDocumentoId, setSelectedDocumentoId] = useState(null);
   const [originalData, setOriginalData] = useState({});
+  const [filteredDocumentos, setFilteredDocumentos] = useState([]); // Estado para documentos filtrados
+  const [searchTerm, setSearchTerm] = useState(''); // Estado para el término de búsqueda
+  
 
   const [formData, setFormData] = useState({
     factura_documento: '',
@@ -30,6 +33,7 @@ function AgregarDocumento() {
         const response = await axiosInstance.get('/documentos/get-documentos');
         if (response.data.success) {
           setDocumentos(response.data.data);
+          setFilteredDocumentos(response.data.data); // Inicializar documentos filtrados
         }
       } catch (error) {
         console.error('Error al obtener los documentos:', error);
@@ -209,6 +213,71 @@ function AgregarDocumento() {
     }
   };
 
+  // Funcion para paginacion
+  const recordsPerPage = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(filteredDocumentos.length / recordsPerPage);
+
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const currentData = filteredDocumentos.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
+
+  // Funcion para buscar en tiempo real
+  const handleSearch = (e) => {
+    const value = e.target.value.toLowerCase();
+    setSearchTerm(value);
+
+    const results = documentos.filter(
+      (doc) =>
+        doc.factura_documento.toLowerCase().includes(value.toLowerCase()) ||
+        doc.estatus_legal.toLowerCase().includes(value.toLowerCase()) ||
+        doc.documento_ampare_propiedad.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredDocumentos(value.trim() === "" ? documentos : results);
+  };
+
+  const handleGenerateExcel = async () => {
+    try {
+      const response = await axiosInstance.get(
+        "/excel/generar-excel?tabla=documentos",
+        {
+          responseType: "blob", // Para manejar archivos binarios
+        }
+      );
+
+      // Crear un enlace para descargar el archivo
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "reporte_documentos.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      Swal.fire({
+        icon: "success",
+        title: "¡Éxito!",
+        text: "El archivo Excel ha sido generado y descargado.",
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo generar el archivo Excel.",
+      });
+      console.error("Error al generar el Excel:", error);
+    }
+  };
+
+
   return (
     <div className={styles.agregarDocumentoContainer}>
       <main className={`${styles.agregarDocumentoMainContent} ${styles.fadeIn}`}>
@@ -225,6 +294,9 @@ function AgregarDocumento() {
               value={formData.factura_documento}
               onChange={handleInputChange}
             />
+            <label htmlFor="fecha_documento" className={styles.inputLabel}>
+                        Fecha Documento
+            </label>
             <input
               type="date"
               placeholder="Fecha de Documento"
@@ -304,6 +376,31 @@ function AgregarDocumento() {
               Agregar
             </button>
           )}
+          <button
+            className={styles.agregarAreaExcelButton}
+            onClick={handleGenerateExcel}
+          >
+            <img
+              src="/icon-excel.png" // Ruta relativa desde la carpeta public
+              alt="Ícono de Excel"
+              className={styles.excelIcon}
+            />
+          </button>
+
+        </div>
+
+        {/* Campo de búsqueda */}
+        <div className={styles.agregarDocumentoFormActions}>
+          <div className={styles.agregarDocumentoSearchContainer}>
+            <input
+              type="text"
+              placeholder="Buscar por Factura, Status Legal o documento"
+              className={styles.agregarDocumentoSearchInput}
+              value={searchTerm}
+              onChange={handleSearch} // Actualiza los resultados en tiempo real
+            />
+            <button className={styles.agregarDocumentoSearchButton} onClick={handleSearch}>🔍</button>
+          </div>
         </div>
 
         {isLoading ? (
@@ -316,7 +413,6 @@ function AgregarDocumento() {
             <table className={`${styles.documentoTable} ${styles.fadeIn}`}>
               <thead>
                 <tr>
-                  <th>ID</th>
                   <th>Factura</th>
                   <th>Fecha</th>
                   <th>Status Legal</th>
@@ -327,9 +423,8 @@ function AgregarDocumento() {
                 </tr>
               </thead>
               <tbody>
-                {documentos.map((documento) => (
+                {currentData.map((documento) => (
                   <tr key={documento.id_documento}>
-                    <td>{documento.id_documento}</td>
                     <td>{documento.factura_documento}</td>
                     <td>{new Date(documento.fecha_documento).toLocaleDateString()}</td>
                     <td>{documento.estatus_legal}</td>
@@ -362,12 +457,35 @@ function AgregarDocumento() {
                 ))}
               </tbody>
             </table>
+            <div className={styles.pagination}>
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          &laquo;
+        </button>
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          <button
+            key={page}
+            onClick={() => handlePageChange(page)}
+            className={currentPage === page ? styles.active : ""}
+          >
+            {page}
+          </button>
+        ))}
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          &raquo;
+        </button>
+      </div>
           </>
         )}
       </main>
       <button
         className={styles.agregarDocumentoHomeButton}
-        onClick={() => navigate('/')}
+        onClick={() => navigate('/menu')}
       >
         🏠
       </button>

@@ -10,6 +10,8 @@ function AgregarBaja() {
   const [bajas, setBajas] = useState([]);
   const [bienes, setBienes] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [filteredBajas, setFilteredBajas] = useState([]); // Estado para bajas filtradas
+  const [searchTerm, setSearchTerm] = useState(''); // Término de búsqueda
   const [formData, setFormData] = useState({
     fecha_baja: '',
     documento_ampare: '',
@@ -20,6 +22,8 @@ function AgregarBaja() {
   });
   const [editingId, setEditingId] = useState(null);
   const [originalData, setOriginalData] = useState({});
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedBien, setSelectedBien] = useState(null);
 
   useEffect(() => {
     const fetchBajas = async () => {
@@ -27,6 +31,7 @@ function AgregarBaja() {
         const response = await axiosInstance.get('/baja-bien/get-bajas-bien');
         if (response.data.success) {
           setBajas(response.data.data);
+          setFilteredBajas(response.data.data); // Inicializar bajas filtradas
         }
       } catch (error) {
         console.error('Error al obtener las bajas:', error);
@@ -80,62 +85,48 @@ function AgregarBaja() {
       });
       return;
     }
-
-    const request = editingId
+  
+    const bajaRequest = editingId
       ? axiosInstance.put(`/baja-bien/update-baja-bien/${editingId}`, prepareFormData())
       : axiosInstance.post('/baja-bien/create-baja-bien', prepareFormData());
-
+  
     try {
-      const response = await request;
-      if (response.data.success) {
-        const updatedBaja = response.data.data;
-
-        if (editingId) {
-          const changes = Object.entries(formData)
-            .filter(([key, value]) => value !== originalData[key])
-            .map(([key, value]) => `<b>${key}:</b> ${originalData[key] || 'N/A'} → ${value}`)
-            .join('<br>');
-
-          Swal.fire({
-            title: 'Confirmar Cambios',
-            html: changes.length > 0 ? changes : '<p>No hay cambios realizados.</p>',
-            icon: 'info',
-            showCancelButton: true,
-            confirmButtonText: 'Guardar',
-            cancelButtonText: 'Cancelar',
-          }).then((result) => {
-            if (result.isConfirmed) {
-              Swal.fire({
-                icon: 'success',
-                title: 'Cambios guardados',
-                text: 'La baja se ha actualizado exitosamente.',
-              });
-
-              setBajas((prev) =>
-                prev.map((baja) => (baja.id_baja_bien === editingId ? updatedBaja : baja))
-              );
-
-              setFormData({
-                fecha_baja: '',
-                documento_ampare: '',
-                poliza_no: '',
-                fecha_poliza: '',
-                id_bien: '',
-                id_usuario: '',
-              });
-              setEditingId(null);
-              setOriginalData({});
-            }
-          });
-        } else {
+      const bajaResponse = await bajaRequest;
+  
+      if (bajaResponse.data.success) {
+        const updatedBaja = bajaResponse.data.data;
+  
+        // Actualizar el estado del bien
+        const bienUpdatePayload = { estado_bien: 'Inactivo' }; // Estado que deseas asignar
+        const bienResponse = await axiosInstance.put(
+          `/bien/update-status-bien/${formData.id_bien}`,
+          bienUpdatePayload
+        );
+  
+        if (bienResponse.data.success) {
           Swal.fire({
             icon: 'success',
-            title: '¡Baja registrada!',
-            text: 'La baja se ha registrado exitosamente.',
+            title: 'Operación exitosa',
+            text: editingId
+              ? 'La baja y la actualización del bien se realizaron exitosamente.'
+              : 'La baja y el estado del bien fueron registrados exitosamente.',
           });
+  
+          if (editingId) {
+            setBajas((prev) =>
+              prev.map((baja) => (baja.id_baja_bien === editingId ? updatedBaja : baja))
+            );
+          } else {
+            setBajas((prev) => [...prev, updatedBaja]);
+          }
 
-          setBajas((prev) => [...prev, updatedBaja]);
+          // Actualizar lista de bienes automáticamente
+          const updatedBienesResponse = await axiosInstance.get('/bien/get-bienes');
+          if (updatedBienesResponse.data.success) {
+            setBienes(updatedBienesResponse.data.data.filter(bien => bien.estado_bien !== 'Inactivo'));
+          }
 
+          // Limpiar formulario y el input de bien seleccionado
           setFormData({
             fecha_baja: '',
             documento_ampare: '',
@@ -144,12 +135,21 @@ function AgregarBaja() {
             id_bien: '',
             id_usuario: '',
           });
+          setSelectedBien(null);
+          setEditingId(null);
+          setOriginalData({});
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error en la actualización del bien',
+            text: bienResponse.data.message || 'No se pudo actualizar el estado del bien.',
+          });
         }
       } else {
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: response.data.message || 'No se pudo completar la operación.',
+          text: bajaResponse.data.message || 'No se pudo completar la operación.',
         });
       }
     } catch (error) {
@@ -160,6 +160,7 @@ function AgregarBaja() {
       });
     }
   };
+  
 
   const handleEditBaja = (id) => {
     const bajaToEdit = bajas.find((baja) => baja.id_baja_bien === id);
@@ -215,6 +216,57 @@ function AgregarBaja() {
     });
   };
 
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleSelectBien = (bien) => {
+    setSelectedBien(bien);
+    formData.id_bien = bien.id_bien; // Actualiza formData con el id del bien seleccionado
+    handleInputChange({
+      target: {
+        name: 'id_bien',
+        value: bien.id_bien,
+      },
+    });
+    setIsModalOpen(false); // Cierra el modal después de seleccionar
+  };
+
+  // Funcion para paginacion
+  const recordsPerPage = 15;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(filteredBajas.length / recordsPerPage);
+
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const currentData = filteredBajas.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
+
+  // Función para manejar la búsqueda en tiempo real
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+
+    const results = bajas.filter(
+      (baja) =>
+        baja.documento_ampare?.toLowerCase().includes(value.toLowerCase()) ||
+        baja.poliza_no?.toLowerCase().includes(value.toLowerCase()) 
+    );
+
+    setFilteredBajas(value.trim() === '' ? bajas : results);
+  };
+
   return (
     <div className={styles.agregarBajaContainer}>
       <main className={`${styles.agregarBajaMainContent} ${styles.fadeIn}`}>
@@ -223,6 +275,9 @@ function AgregarBaja() {
         </h2>
         <div className={styles.agregarBajaFormContainer}>
           <div className={styles.agregarBajaFormRow}>
+          <label htmlFor="fecha_baja" className={styles.inputLabel}>
+            Fecha Baja
+          </label>
             <input
               type="date"
               placeholder="Fecha de Baja"
@@ -249,6 +304,9 @@ function AgregarBaja() {
             />
           </div>
           <div className={styles.agregarBajaFormRow}>
+          <label htmlFor="fecha_poliza" className={styles.inputLabel}>
+            Fecha Poliza
+          </label>
             <input
               type="date"
               placeholder="Fecha de Póliza"
@@ -257,19 +315,37 @@ function AgregarBaja() {
               value={formData.fecha_poliza}
               onChange={handleInputChange}
             />
-            <select
-              className={styles.agregarBajaSelect}
-              name="id_bien"
-              value={formData.id_bien}
-              onChange={handleInputChange}
-            >
-              <option value="">Seleccione un Bien</option>
-              {bienes.map((bien) => (
-                <option key={bien.id_bien} value={bien.id_bien}>
-                  {`ID: ${bien.id_bien} - Inventario: ${bien.no_inventario}`}
-                </option>
-              ))}
-            </select>
+            {/* Botón para abrir el modal */}
+            {/*<button onClick={handleOpenModal}>Seleccionar Bien</button>*/}
+
+            {/* Modal */}
+            {isModalOpen && (
+              <div className={styles.modalOverlay}>
+                <div className={styles.modal}>
+                  <h2>Seleccione un Bien</h2>
+                  <ul className={styles.bienList}>
+                    {bienes.map((bien) => (
+                    <li
+                      key={bien.id_bien}
+                      onClick={() => handleSelectBien(bien)}
+                      className={styles.bienItem}
+                      >
+                        {`ID: ${bien.id_bien} - Inventario: ${bien.no_inventario}`}
+                    </li>
+                    ))}
+                  </ul>
+                    <button onClick={handleCloseModal} className={styles.closeButton}>Cerrar</button>
+                </div>
+              </div>
+            )}
+            {/* Input para mostrar el bien seleccionado */}
+            <input
+              type="text"
+              className={styles.agregarBajaInput}
+              value={selectedBien ? `${selectedBien.id_bien} - Inventario: ${selectedBien.no_inventario}` : 'Seleccione un Bien'}
+              readOnly
+              onClick={handleOpenModal}
+            />
             <input
               type="text"
               placeholder="ID Usuario"
@@ -295,6 +371,22 @@ function AgregarBaja() {
           </button>
         </div>
 
+        {/* Campo de búsqueda */}
+        <div className={styles.agregarBajaFormActions}>
+          <div className={styles.agregarBajaSearchContainer}>
+            <input
+              type="text"
+              placeholder="Buscar por Documento Ampara o Póliza No"
+              className={styles.agregarBajaSearchInput}
+              value={searchTerm}
+              onChange={handleSearch} // Búsqueda en tiempo real
+            />
+            <button className={styles.agregarBajaSearchButton} disabled>
+              🔍
+            </button>
+          </div>
+        </div>
+
         {isLoading ? (
           <div className={styles.spinnerContainer}>
             <TailSpin height="80" width="80" color="red" ariaLabel="loading" />
@@ -316,7 +408,7 @@ function AgregarBaja() {
                 </tr>
               </thead>
               <tbody>
-                {bajas.map((baja) => (
+                { currentData.map((baja) => (
                   <tr key={baja.id_baja_bien}>
                     <td>{baja.id_baja_bien}</td>
                     <td>{new Date(baja.fecha_baja).toLocaleDateString()}</td>
@@ -345,17 +437,43 @@ function AgregarBaja() {
                 ))}
               </tbody>
             </table>
+
+            <div className={styles.pagination}>
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          &laquo;
+        </button>
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          <button
+            key={page}
+            onClick={() => handlePageChange(page)}
+            className={currentPage === page ? styles.active : ""}
+          >
+            {page}
+          </button>
+        ))}
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          &raquo;
+        </button>
+      </div>
+
           </>
         )}
       </main>
       <button
         className={styles.agregarBajaHomeButton}
-        onClick={() => navigate('/')}
+        onClick={() => navigate('/menu')}
       >
         🏠
       </button>
     </div>
   );
 }
+
 
 export default AgregarBaja;

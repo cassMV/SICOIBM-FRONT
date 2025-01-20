@@ -11,6 +11,8 @@ function AgregarUsuario() {
   const [empleados, setEmpleados] = useState([]); // Lista de empleados
   const [isLoading, setIsLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
+  const [filteredUsuarios, setFilteredUsuarios] = useState([]); // Usuarios filtrados
+  const [searchTerm, setSearchTerm] = useState(''); // Término de búsqueda
   // Estado del formulario
   const [formData, setFormData] = useState({
     usuario: '',
@@ -27,6 +29,7 @@ function AgregarUsuario() {
         const usuariosResponse = await axiosInstance.get('/usuario/get-usuarios');
         if (usuariosResponse.data.success) {
           setUsuarios(usuariosResponse.data.data);
+          setFilteredUsuarios(usuariosResponse.data.data); // Inicializar usuarios filtrados
         }
 
         const empleadosResponse = await axiosInstance.get('/empleado/get-empleados');
@@ -54,16 +57,23 @@ function AgregarUsuario() {
   
   // Enviar el formulario
   const handleAddUsuario = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevenir comportamiento predeterminado del formulario
     try {
-      const response = await axiosInstance.post('/usuario/create-usuario', formData);
+      // Enviar los datos al endpoint
+      const response = await axiosInstance.post('/auth/register', formData);
+      
       if (response.data.success) {
+        // Mostrar mensaje de éxito
         Swal.fire({
           icon: 'success',
-          title: 'Usuario agregado',
-          text: 'El usuario se ha agregado exitosamente.',
+          title: 'Usuario registrado',
+          text: 'El usuario se ha registrado exitosamente.',
         });
-        setUsuarios([...usuarios, response.data.data]); // Agregar el nuevo usuario a la lista
+  
+        // Actualizar la lista de usuarios (si es necesario en tu lógica)
+        setUsuarios([...usuarios, response.data.data]);
+  
+        // Limpiar el formulario
         setFormData({
           usuario: '',
           contrasena: '',
@@ -71,17 +81,19 @@ function AgregarUsuario() {
           id_rol: '',
         });
       } else {
+        // Mostrar error si el servidor lo devuelve
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: response.data.message || 'No se pudo agregar el usuario.',
+          text: response.data.message || 'No se pudo registrar el usuario.',
         });
       }
     } catch (error) {
+      // Manejar errores inesperados
       Swal.fire({
         icon: 'error',
         title: 'Error en el servidor',
-        text: error.message || 'Error desconocido.',
+        text: error.response?.data?.message || error.message || 'Error desconocido.',
       });
     }
   };
@@ -213,6 +225,36 @@ const handleSaveChanges = async () => {
   }
 };
 
+// Funcion para paginacion
+const recordsPerPage = 15;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(filteredUsuarios.length / recordsPerPage);
+
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const currentData = filteredUsuarios.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
+  
+
+  // Manejo de la búsqueda en tiempo real
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+
+    const results = usuarios.filter((usuario) =>
+      usuario.usuario?.toLowerCase().includes(value.toLowerCase())
+    );
+
+    setFilteredUsuarios(value.trim() === '' ? usuarios : results);
+  };
+
   return (
     <div className={styles.agregarUsuarioContainer}>
       <main className={`${styles.agregarUsuarioMainContent} ${styles.fadeIn}`}>
@@ -286,6 +328,22 @@ const handleSaveChanges = async () => {
           </div>
         </form>
 
+        {/* Campo de búsqueda */}
+        <div className={styles.agregarUsuarioFormActions}>
+          <div className={styles.agregarUsuariosearchContainer}>
+            <input
+              type="text"
+              placeholder="Buscar por Usuario"
+              className={styles.agregarUsuarioSearchInput}
+              value={searchTerm}
+              onChange={handleSearch} // Búsqueda en tiempo real
+            />
+            <button className={styles.agregarUsuarioSearchButton} onClick={(e) => e.preventDefault()}aria-label="Search button (decorative)">
+              🔍
+            </button>
+          </div>
+        </div>
+
         {/* Spinner o tabla de usuarios */}
         {isLoading ? (
           <div className={styles.spinnerContainer}>
@@ -297,22 +355,20 @@ const handleSaveChanges = async () => {
             <table className={`${styles.usuarioTable} ${styles.fadeIn}`}>
               <thead>
                 <tr>
-                  <th>ID</th>
                   <th>Usuario</th>
                   <th>Contraseña</th>
-                  <th>ID Empleado</th>
+                  <th>Empleado</th>
                   <th>Rol</th>
                   <th>Opciones</th>
                 </tr>
               </thead>
               <tbody>
-                {usuarios.map((usuario) => (
+                {currentData.map((usuario) => (
                   <tr key={usuario.id_usuario}>
-                    <td>{usuario.id_usuario}</td>
                     <td>{usuario.usuario}</td>
                     <td>******</td>
-                    <td>{usuario.id_empleado}</td>
-                    <td>{usuario.id_rol}</td>
+                    <td>{usuario.empleado.nombre_empleado}</td>
+                    <td>{usuario.rol.nombre_rol}</td>
                     <td>
                       <div className={styles.buttonGroup}>
                         <button
@@ -333,6 +389,29 @@ const handleSaveChanges = async () => {
                 ))}
               </tbody>
             </table>
+            <div className={styles.pagination}>
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          &laquo;
+        </button>
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          <button
+            key={page}
+            onClick={() => handlePageChange(page)}
+            className={currentPage === page ? styles.active : ""}
+          >
+            {page}
+          </button>
+        ))}
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          &raquo;
+        </button>
+      </div>
           </>
         )}
       </main>

@@ -12,6 +12,8 @@ const AgregarDireccion = () => {
   const [nombreDireccion, setNombreDireccion] = useState('');
   const [editingDireccion, setEditingDireccion] = useState(null);
   const [originalData, setOriginalData] = useState({}); // Almacena los datos originales de la dirección editada
+  const [searchTerm, setSearchTerm] = useState(''); // Estado para el término de búsqueda
+  const [filteredDirecciones, setFilteredDirecciones] = useState([]); // Estado para direcciones filtradas
 
   // Petición a la API para obtener las direcciones
   useEffect(() => {
@@ -20,6 +22,7 @@ const AgregarDireccion = () => {
         const response = await axiosInstance.get('/direccion/get-direcciones');
         if (response.data.success) {
           setDirecciones(response.data.data);
+          setFilteredDirecciones(response.data.data); // Inicializa las direcciones filtradas
         } else {
           console.error(response.data.message);
         }
@@ -202,6 +205,69 @@ const AgregarDireccion = () => {
       }
     });
   };
+  
+  // Funcion para paginacion
+  const recordsPerPage = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(filteredDirecciones.length / recordsPerPage);
+
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const currentData = filteredDirecciones.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
+
+   // Función para manejar la búsqueda en tiempo real
+   const handleSearch = (e) => {
+    const term = e.target.value.toLowerCase();
+    setSearchTerm(term);
+
+    const filtered = direcciones.filter((direccion) =>
+      direccion.nombre_direccion.toLowerCase().includes(term)
+    );
+
+    setFilteredDirecciones(filtered);
+  };
+
+  const handleGenerateExcel = async () => {
+    try {
+      const response = await axiosInstance.get(
+        "/excel/generar-excel?tabla=direccion",
+        {
+          responseType: "blob", // Para manejar archivos binarios
+        }
+      );
+
+      // Crear un enlace para descargar el archivo
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "reporte_bien.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      Swal.fire({
+        icon: "success",
+        title: "¡Éxito!",
+        text: "El archivo Excel ha sido generado y descargado.",
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo generar el archivo Excel.",
+      });
+      console.error("Error al generar el Excel:", error);
+    }
+  };
+
 
   return (
     <div className={styles.agregarDireccionContainer}>
@@ -242,6 +308,31 @@ const AgregarDireccion = () => {
               Agregar
             </button>
           )}
+          <button
+            className={styles.agregarAreaExcelButton}
+            onClick={handleGenerateExcel}
+          >
+            <img
+              src="/icon-excel.png" // Ruta relativa desde la carpeta public
+              alt="Ícono de Excel"
+              className={styles.excelIcon}
+            />
+          </button>
+
+        </div>
+
+        {/* Campo de búsqueda */}
+        <div className={styles.agregarDireccionFormActions}>
+          <div className={styles.agregarDireccionSearchContainer}>
+            <input
+              type="text"
+              placeholder="Buscar por nombre de la dirección"
+              className={styles.agregarDireccionSearchInput}
+              value={searchTerm}
+              onChange={handleSearch} // Actualiza los resultados en tiempo real
+            />
+            <button className={styles.agregarDireccionSearchButton} onClick={handleSearch}>🔍</button>
+          </div>
         </div>
 
         {isLoading ? (
@@ -254,15 +345,13 @@ const AgregarDireccion = () => {
             <table className={`${styles.direccionTable} ${styles.fadeIn}`}>
               <thead>
                 <tr>
-                  <th>ID</th>
                   <th>Nombre</th>
                   <th>Opciones</th>
                 </tr>
               </thead>
               <tbody>
-                {direcciones.map((direccion) => (
+                {currentData.map((direccion) => (
                   <tr key={direccion.id_direccion}>
-                    <td>{direccion.id_direccion}</td>
                     <td>{direccion.nombre_direccion}</td>
                     <td>
                       <div className={styles.buttonGroup}>
@@ -284,10 +373,33 @@ const AgregarDireccion = () => {
                 ))}
               </tbody>
             </table>
+            <div className={styles.pagination}>
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          &laquo;
+        </button>
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          <button
+            key={page}
+            onClick={() => handlePageChange(page)}
+            className={currentPage === page ? styles.active : ""}
+          >
+            {page}
+          </button>
+        ))}
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          &raquo;
+        </button>
+      </div>
           </>
         )}
       </main>
-      <button className={styles.agregarDireccionHomeButton} onClick={() => navigate('/')}>
+      <button className={styles.agregarDireccionHomeButton} onClick={() => navigate('/menu')}>
         🏠
       </button>
     </div>

@@ -12,6 +12,9 @@ function AgregarCodigo() {
   const [isLoading, setIsLoading] = useState(true);
   const [editMode, setEditMode] = useState(false); // Modo edición
   const [selectedPartidaId, setSelectedPartidaId] = useState(null); // ID de la partida en edición
+  const [filteredPartidas, setFilteredPartidas] = useState([]); // Partidas filtradas
+  const [searchTerm, setSearchTerm] = useState(''); // Término de búsqueda
+
 
   // Estado del formulario
   const [formData, setFormData] = useState({
@@ -29,6 +32,7 @@ function AgregarCodigo() {
         const response = await axiosInstance.get('/codigo-partida-especifica/get-partidas');
         if (response.data.success) {
           setPartidas(response.data.data);
+          setFilteredPartidas(response.data.data); // Inicializar las partidas filtradas
         } else {
           console.error('Error:', response.data.message);
         }
@@ -228,6 +232,70 @@ function AgregarCodigo() {
     });
   };
 
+  // Funcion para paginacion
+  const recordsPerPage = 15;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(filteredPartidas.length / recordsPerPage);
+
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const currentData = filteredPartidas.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
+
+  // Función de búsqueda en tiempo real
+  const handleSearch = (e) => {
+    const value = e.target.value.toLowerCase();
+    setSearchTerm(value);
+
+    const results = partidas.filter(
+      (partida) =>
+        partida.codigo_partida?.toLowerCase().includes(value.toLowerCase()) ||
+        partida.nombre_partida?.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredPartidas(value.trim() === "" ? partidas : results);
+  };
+
+  const handleGenerateExcel = async () => {
+    try {
+      const response = await axiosInstance.get(
+        "/excel/generar-excel?tabla=codigopartidaespecifica",
+        {
+          responseType: "blob", // Para manejar archivos binarios
+        }
+      );
+
+      // Crear un enlace para descargar el archivo
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "reporte_codigo_partida_especifica.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      Swal.fire({
+        icon: "success",
+        title: "¡Éxito!",
+        text: "El archivo Excel ha sido generado y descargado.",
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo generar el archivo Excel.",
+      });
+      console.error("Error al generar el Excel:", error);
+    }
+  };
+
+
   return (
     <div className={styles.agregarCodigoContainer}>
       <main className={`${styles.agregarCodigoMainContent} ${styles.fadeIn}`}>
@@ -311,6 +379,33 @@ function AgregarCodigo() {
               Agregar
             </button>
           )}
+          <button
+            className={styles.agregarAreaExcelButton}
+            onClick={handleGenerateExcel}
+          >
+            <img
+              src="/icon-excel.png" // Ruta relativa desde la carpeta public
+              alt="Ícono de Excel"
+              className={styles.excelIcon}
+            />
+          </button>
+
+        </div>
+
+        {/* Campo de búsqueda */}
+        <div className={styles.agregarCodigoFormActions}>
+        <div className={styles.agregarCodigoSearchContainer}>
+          <input
+            type="text"
+            placeholder="Buscar por Código o Nombre de Partida"
+            className={styles.agregarCodigoSearchInput}
+            value={searchTerm}
+            onChange={handleSearch} // Llama a la función de búsqueda en tiempo real
+          />
+          <button className={styles.agregarCodigoSearchButton} disabled>
+            🔍
+          </button>
+        </div>
         </div>
 
         {/* Spinner o tabla de partidas */}
@@ -324,7 +419,6 @@ function AgregarCodigo() {
             <table className={`${styles.codigoTable} ${styles.fadeIn}`}>
               <thead>
                 <tr>
-                  <th>ID</th>
                   <th>Código</th>
                   <th>Nombre</th>
                   <th>Borrador</th>
@@ -334,9 +428,8 @@ function AgregarCodigo() {
                 </tr>
               </thead>
               <tbody>
-                {partidas.map((partida) => (
+                {currentData.map((partida) => (
                   <tr key={partida.id_partida}>
-                    <td>{partida.id_partida}</td>
                     <td>{partida.codigo_partida}</td>
                     <td>{partida.nombre_partida}</td>
                     <td>{partida.borrador_partida ? 'Sí' : 'No'}</td>
@@ -362,13 +455,36 @@ function AgregarCodigo() {
                 ))}
               </tbody>
             </table>
+            <div className={styles.pagination}>
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          &laquo;
+        </button>
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          <button
+            key={page}
+            onClick={() => handlePageChange(page)}
+            className={currentPage === page ? styles.active : ""}
+          >
+            {page}
+          </button>
+        ))}
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          &raquo;
+        </button>
+      </div>
           </>
         )}
       </main>
       {/* Botón para ir al Home (opcional) */}
       <button
         className={styles.agregarCodigoHomeButton}
-        onClick={() => navigate('/')}
+        onClick={() => navigate('/menu')}
       >
         🏠
       </button>

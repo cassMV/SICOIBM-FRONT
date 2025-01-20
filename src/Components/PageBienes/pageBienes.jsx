@@ -13,7 +13,7 @@ const Bienes = () => {
         <Routes>
         <Route path="bien" element={<BienesExistentes />} />
           {/* Ruta por defecto para /acciones */}
-          <Route path="/" element={<h1></h1>} />
+          <Route path="/menu" element={<h1></h1>} />
         </Routes>
       </div>
     </div>

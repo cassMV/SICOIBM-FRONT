@@ -12,7 +12,7 @@ const listaDesplegable5 = () => {
 
     return (
         <div className={styles.Lista5MenuLateral}>
-            <button className={styles.Lista5BackButton} onClick={() => navigate("/")}>←</button>
+            <button className={styles.Lista5BackButton} onClick={() => navigate("/menu")}>←</button>
             <ul className={styles.Lista5MenuList}>
             <h2 className={styles.Lista5MenuTitle}>Agregar</h2>
             {items.map((item, index) => (

@@ -17,7 +17,7 @@ const Login = () => {
     const loginData = { usuario, contrasena };
 
     try {
-      const response = await fetch('http://localhost:3100/auth/login', {
+      const response = await fetch('http://localhost:3100/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -35,7 +35,7 @@ const Login = () => {
           icon: 'success',
           confirmButtonText: 'Aceptar',
         }).then(() => {
-          navigate('/');
+          navigate('/menu');
         });
       } else {
         setError('Credenciales incorrectas. Inténtalo de nuevo.');
@@ -91,7 +91,7 @@ const Login = () => {
           </div>
         </form>
         {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
-        <p
+        {/*<p
           style={{
             marginTop: '15px',
             textAlign: 'center',
@@ -100,7 +100,7 @@ const Login = () => {
           onClick={() => navigate('/register')}
         >
           ¿No tienes cuenta? <span style={{ color: '#b21d1d' }}>Regístrate aquí.</span>
-        </p>
+        </p>*/}
       </div>
     </div>
   );

@@ -47,13 +47,15 @@ function AgregarBien() {
     fetchProducts();
   }, []);
 
-  // Función para filtrar la lista de productos por marca o modelo
-  const handleSearch = () => {
-    const term = searchTerm.toLowerCase();
-    const filtered = products.filter((prod) => {
+  // Función para manejar la búsqueda en tiempo real
+  const handleSearchInput = (e) => {
+    const term = e.target.value.toLowerCase();
+      setSearchTerm(term);
+      const filtered = products.filter((prod) => {
       const brand = prod.marca?.nombre_marca?.toLowerCase() || '';
       const model = prod.modelo?.toLowerCase() || '';
-      return brand.includes(term) || model.includes(term);
+      const name = prod.nombre_producto?.toLowerCase() || '';
+      return brand.includes(term) || model.includes(term) || name.includes(term);
     });
     setFilteredProducts(filtered);
   };
@@ -87,6 +89,57 @@ function AgregarBien() {
     });
   };
 
+  //Funcion para paginacion
+  const recordsPerPage = 5; // Mostrar 10 productos por página
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(filteredProducts.length / recordsPerPage);
+
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const currentData = filteredProducts.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
+
+  const handleGenerateExcel = async () => {
+    try {
+      const response = await axiosInstance.get(
+        "/excel/generar-excel?tabla=bien",
+        {
+          responseType: "blob", // Para manejar archivos binarios
+        }
+      );
+
+      // Crear un enlace para descargar el archivo
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "reporte_bien.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      Swal.fire({
+        icon: "success",
+        title: "¡Éxito!",
+        text: "El archivo Excel ha sido generado y descargado.",
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo generar el archivo Excel.",
+      });
+      console.error("Error al generar el Excel:", error);
+    }
+  };
+
+
   return (
     <div className={styles.agregarBienContainer}>
       <ListaDesplegable />
@@ -97,17 +150,29 @@ function AgregarBien() {
         <div className={styles.agregarBienSearchContainer}>
           <input
             type="text"
-            placeholder="Buscar por marca o modelo"
+            placeholder="Buscar por nombre, marca o modelo"
             className={styles.agregarBienSearchInput}
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearchInput} 
           />
           <button
             className={styles.agregarBienSearchButton}
-            onClick={handleSearch}
+            onClick={(e) => e.preventDefault()}
+            aria-label="Search button (decorative)"
           >
             🔍
           </button>
+          <button
+            className={styles.agregarAreaExcelButton}
+            onClick={handleGenerateExcel}
+          >
+            <img
+              src="/icon-excel.png" // Ruta relativa desde la carpeta public
+              alt="Ícono de Excel"
+              className={styles.excelIcon}
+            />
+          </button>
+
         </div>
 
         {isLoading ? (
@@ -121,7 +186,6 @@ function AgregarBien() {
             <table className={`${styles.bienTable} ${styles.fadeIn}`}>
               <thead>
                 <tr>
-                  <th>ID Producto</th>
                   <th>Nombre Producto</th>
                   <th>Marca</th>
                   <th>Modelo</th>
@@ -129,9 +193,8 @@ function AgregarBien() {
                 </tr>
               </thead>
               <tbody>
-                {filteredProducts.map((prod) => (
+                {currentData.map((prod) => (
                   <tr key={prod.id_producto}>
-                    <td>{prod.id_producto}</td>
                     <td>{prod.nombre_producto}</td>
                     <td>{prod.marca ? prod.marca.nombre_marca : 'N/A'}</td>
                     <td>{prod.modelo}</td>
@@ -147,6 +210,30 @@ function AgregarBien() {
                 ))}
               </tbody>
             </table>
+
+            <div className={styles.pagination}>
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                &laquo;
+              </button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                <button
+                  key={page}
+                  onClick={() => handlePageChange(page)}
+                  className={currentPage === page ? styles.active : ""}
+                >
+                  {page}
+                </button>
+              ))}
+             <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              &raquo;
+            </button>
+          </div>
 
             {/* Mostrar el producto seleccionado */}
             <div className={styles.selectedProductContainer}>
@@ -190,7 +277,7 @@ function AgregarBien() {
       {/* Botón para navegar al menú principal */}
       <button
         className={styles.agregarBienHomeButton}
-        onClick={() => navigate('/')}
+        onClick={() => navigate('/menu')}
       >
         🏠
       </button>

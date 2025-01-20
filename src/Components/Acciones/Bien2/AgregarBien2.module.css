@@ -292,3 +292,101 @@
   vertical-align: middle;
 }
 
+.inputLabel {
+  display: block; /* Hace que la etiqueta ocupe toda la línea */
+  font-size: 14px;
+  margin-bottom: 5px; /* Espacio entre la etiqueta y el input */
+  color: #333; /* Color del texto de la etiqueta */
+  font-weight: bold; /* Opcional, para darle un toque más destacado a la etiqueta */
+}
+
+.agregarBien2SearchContainer {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.agregarBien2SearchInput {
+  padding: 10px;
+  border: 1px solid #a12d2f;
+  border-radius: 5px;
+  margin-right: 10px;
+  width: 300px;
+}
+
+.agregarBien2SearchButton {
+  padding: 10px;
+  background-color: #a12d2f;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.agregarBien2SearchButton:hover {
+  background-color: #4a4a4a;
+}
+.historyButton {
+  background-color: #f4f4f4;
+  color: #555;
+}
+
+.historyButton:hover {
+  background-color: #e0e0e0;
+  color: #000;
+}
+
+
+.historialModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.historialModalContent {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  width: 80%;
+  max-height: 80%;
+  overflow-y: auto;
+}
+
+.historialTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.historialTable th,
+.historialTable td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.historialTable th {
+  background-color: #f4f4f4;
+}
+
+.historialCloseButton {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background: red;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.historialCloseButton:hover {
+  background: darkred;
+}
+

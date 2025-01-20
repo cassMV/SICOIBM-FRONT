@@ -11,6 +11,8 @@ const AgregarRol = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [editingRol, setEditingRol] = useState(null); // Estado para modo edición
   const [originalData, setOriginalData] = useState({}); // Almacena los datos originales del rol editado
+  const [searchTerm, setSearchTerm] = useState(''); // Estado para el término de búsqueda
+  const [filteredRoles, setFilteredRoles] = useState([]); // Estado para roles filtrados
 
   // Estado del formulario
   const [formData, setFormData] = useState({
@@ -25,6 +27,7 @@ const AgregarRol = () => {
         const response = await axiosInstance.get('/rol/get-roles');
         if (response.data.success) {
           setRoles(response.data.data);
+          setFilteredRoles(response.data.data); // Inicializa roles filtrados
         } else {
           console.error('Error:', response.data.message);
         }
@@ -159,6 +162,35 @@ const AgregarRol = () => {
     }
   };
 
+  //Funcion para paginacion
+  const recordsPerPage = 15;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(filteredRoles.length / recordsPerPage);
+
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const currentData = filteredRoles.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
+
+  // Función para manejar la búsqueda en tiempo real
+  const handleSearch = (e) => {
+    const term = e.target.value.toLowerCase();
+    setSearchTerm(term);
+
+    const filtered = roles.filter((rol) =>
+      rol.nombre_rol.toLowerCase().includes(term)
+    );
+
+    setFilteredRoles(filtered);
+  };
+
   return (
     <div className={styles.agregarRolContainer}>
       <main className={`${styles.agregarRolMainContent} ${styles.fadeIn}`}>
@@ -209,6 +241,20 @@ const AgregarRol = () => {
           )}
         </div>
 
+        {/* Campo de búsqueda */}
+        <div className={styles.agregarRolFormActions}>
+          <div className={styles.agregarRolSearchContainer}>
+            <input
+              type="text"
+              placeholder="Buscar por nombre del rol"
+              className={styles.agregarRolSearchInput}
+              value={searchTerm}
+              onChange={handleSearch} // Actualiza la búsqueda en tiempo real
+            />
+            <button className={styles.agregarRolSearchButton} onClick={handleSearch}>🔍</button>
+          </div>
+        </div>
+
         {/* Spinner o tabla de roles */}
         {isLoading ? (
           <div className={styles.spinnerContainer}>
@@ -220,16 +266,14 @@ const AgregarRol = () => {
             <table className={`${styles.rolTable} ${styles.fadeIn}`}>
               <thead>
                 <tr>
-                  <th>ID</th>
                   <th>Nombre</th>
                   <th>Descripción</th>
                   <th>Opciones</th>
                 </tr>
               </thead>
               <tbody>
-                {roles.map((rol) => (
+                {currentData.map((rol) => (
                   <tr key={rol.id_rol}>
-                    <td>{rol.id_rol}</td>
                     <td>{rol.nombre_rol}</td>
                     <td>{rol.descripcion_rol}</td>
                     <td>
@@ -252,6 +296,29 @@ const AgregarRol = () => {
                 ))}
               </tbody>
             </table>
+            <div className={styles.pagination}>
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          &laquo;
+        </button>
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          <button
+            key={page}
+            onClick={() => handlePageChange(page)}
+            className={currentPage === page ? styles.active : ""}
+          >
+            {page}
+          </button>
+        ))}
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          &raquo;
+        </button>
+      </div>
           </>
         )}
       </main>

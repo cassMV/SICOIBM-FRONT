@@ -9,6 +9,8 @@ function AgregarSubcuenta() {
   const navigate = useNavigate();
   const [subcuentas, setSubcuentas] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [filteredSubcuentas, setFilteredSubcuentas] = useState([]); // Subcuentas filtradas
+  const [searchTerm, setSearchTerm] = useState(''); // Término de búsqueda
 
   // Estado del formulario
   const [nombreSubcuenta, setNombreSubcuenta] = useState('');
@@ -26,6 +28,7 @@ function AgregarSubcuenta() {
         const response = await axiosInstance.get('/subcuenta-armonizada/get-subcuentas');
         if (response.data.success) {
           setSubcuentas(response.data.data);
+          setFilteredSubcuentas(response.data.data); // Inicializar subcuentas filtradas
         } else {
           console.error('Error:', response.data.message);
         }
@@ -210,6 +213,69 @@ function AgregarSubcuenta() {
     setOriginalData({});
   };
 
+  //Funcion para paginacion
+  const recordsPerPage = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(filteredSubcuentas.length / recordsPerPage);
+
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const currentData = filteredSubcuentas.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
+
+  // Función para manejar la búsqueda en tiempo real
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+
+    const results = subcuentas.filter((subcuenta) =>
+      subcuenta.nombre_subcuenta?.toLowerCase().includes(value.toLowerCase())
+    );
+
+    setFilteredSubcuentas(value.trim() === '' ? subcuentas : results);
+  };
+
+  const handleGenerateExcel = async () => {
+    try {
+      const response = await axiosInstance.get(
+        "/excel/generar-excel?tabla=subcuentaarmonizada",
+        {
+          responseType: "blob", // Para manejar archivos binarios
+        }
+      );
+
+      // Crear un enlace para descargar el archivo
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "reporte_subcuenta_armonizada.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      Swal.fire({
+        icon: "success",
+        title: "¡Éxito!",
+        text: "El archivo Excel ha sido generado y descargado.",
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo generar el archivo Excel.",
+      });
+      console.error("Error al generar el Excel:", error);
+    }
+  };
+
+
   return (
     <div className={styles.agregarSubcuentaContainer}>
       <main className={`${styles.agregarSubcuentaMainContent} ${styles.fadeIn}`}>
@@ -276,6 +342,31 @@ function AgregarSubcuenta() {
               Agregar
             </button>
           )}
+          <button
+            className={styles.agregarAreaExcelButton}
+            onClick={handleGenerateExcel}
+          >
+            <img
+              src="/icon-excel.png" // Ruta relativa desde la carpeta public
+              alt="Ícono de Excel"
+              className={styles.excelIcon}
+            />
+          </button>
+
+        </div>
+
+        {/* Campo de búsqueda */}
+        <div className={styles.agregarSubcuentaFormActions}>
+          <div className={styles.agregarSubcuentaSearchContainer}>
+            <input
+              type="text"
+              placeholder="Buscar por Nombre de Subcuenta"
+              className={styles.agregarSubcuentaSearchInput}
+              value={searchTerm}
+              onChange={handleSearch}
+            />
+            <button className={styles.agregarSubcuentaSearchButton} disabled>🔍</button>
+        </div>
         </div>
 
         {isLoading ? (
@@ -288,7 +379,6 @@ function AgregarSubcuenta() {
             <table className={`${styles.subcuentaTable} ${styles.fadeIn}`}>
               <thead>
                 <tr>
-                  <th>ID</th>
                   <th>Nombre</th>
                   <th>Status</th>
                   <th>Borrador</th>
@@ -296,9 +386,8 @@ function AgregarSubcuenta() {
                 </tr>
               </thead>
               <tbody>
-                {subcuentas.map((subcuenta) => (
+                {currentData.map((subcuenta) => (
                   <tr key={subcuenta.id_subcuenta}>
-                    <td>{subcuenta.id_subcuenta}</td>
                     <td>{subcuenta.nombre_subcuenta}</td>
                     <td>{subcuenta.status_subcuenta}</td>
                     <td>{subcuenta.borrador_subcuenta ? 'Sí' : 'No'}</td>
@@ -322,6 +411,29 @@ function AgregarSubcuenta() {
                 ))}
               </tbody>
             </table>
+            <div className={styles.pagination}>
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          &laquo;
+        </button>
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          <button
+            key={page}
+            onClick={() => handlePageChange(page)}
+            className={currentPage === page ? styles.active : ""}
+          >
+            {page}
+          </button>
+        ))}
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          &raquo;
+        </button>
+      </div>
           </>
         )}
       </main>

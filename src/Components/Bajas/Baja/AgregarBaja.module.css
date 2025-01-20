@@ -196,3 +196,93 @@
     vertical-align: middle;
   }
   
+/* Fondo oscuro del modal */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Estilo del modal */
+.modal {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 300px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Lista de bienes */
+.bienList {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.bienItem {
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #ccc;
+}
+
+.bienItem:hover {
+  background-color: #f0f0f0;
+}
+
+/* Botón de cerrar */
+.closeButton {
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #a12d2f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  background-color: #686868;
+}
+
+.inputLabel {
+  display: block; /* Hace que la etiqueta ocupe toda la línea */
+  font-size: 14px;
+  margin-bottom: 5px; /* Espacio entre la etiqueta y el input */
+  color: #333; /* Color del texto de la etiqueta */
+  font-weight: bold; /* Opcional, para darle un toque más destacado a la etiqueta */
+}
+
+.agregarBajaSearchContainer {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.agregarBajaSearchInput {
+  padding: 10px;
+  border: 1px solid #a12d2f;
+  border-radius: 5px;
+  margin-right: 10px;
+  width: 300px;
+}
+
+.agregarBajaSearchButton {
+  padding: 10px;
+  background-color: #a12d2f;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.agregarBajaSearchButton:hover {
+  background-color: #4a4a4a;
+}

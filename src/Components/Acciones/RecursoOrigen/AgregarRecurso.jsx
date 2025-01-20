@@ -9,6 +9,8 @@ function AgregarRecurso() {
   const navigate = useNavigate();
   const [recursos, setRecursos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [filteredRecursos, setFilteredRecursos] = useState([]); // Recursos filtrados
+  const [searchTerm, setSearchTerm] = useState(''); // Término de búsqueda
 
   // Estado del formulario
   const [descripcionRecurso, setDescripcionRecurso] = useState('');
@@ -24,6 +26,7 @@ function AgregarRecurso() {
         const response = await axiosInstance.get('/recurso-origen/get-recursos-origen');
         if (response.data.success) {
           setRecursos(response.data.data);
+          setFilteredRecursos(response.data.data); // Inicializa los recursos filtrados
         } else {
           console.error('Error:', response.data.message);
         }
@@ -196,6 +199,69 @@ function AgregarRecurso() {
     }
   };
 
+  //Funcion de paginacion
+  const recordsPerPage = 15;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(filteredRecursos.length / recordsPerPage);
+
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const currentData = filteredRecursos.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
+
+  // Función para manejar la búsqueda en tiempo real
+  const handleSearch = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+
+    const results = recursos.filter((recurso) =>
+      recurso.descripcion_recurso?.toLowerCase().includes(value.toLowerCase())
+    );
+
+    setFilteredRecursos(value.trim() === '' ? recursos : results);
+  };
+
+  const handleGenerateExcel = async () => {
+    try {
+      const response = await axiosInstance.get(
+        "/excel/generar-excel?tabla=recursoorigen",
+        {
+          responseType: "blob", // Para manejar archivos binarios
+        }
+      );
+
+      // Crear un enlace para descargar el archivo
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "reporte_recurso_origen.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      Swal.fire({
+        icon: "success",
+        title: "¡Éxito!",
+        text: "El archivo Excel ha sido generado y descargado.",
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo generar el archivo Excel.",
+      });
+      console.error("Error al generar el Excel:", error);
+    }
+  };
+
+
   return (
     <div className={styles.agregarRecursoContainer}>
       <main className={`${styles.agregarRecursoMainContent} ${styles.fadeIn}`}>
@@ -237,6 +303,33 @@ function AgregarRecurso() {
               Agregar
             </button>
           )}
+          <button
+            className={styles.agregarAreaExcelButton}
+            onClick={handleGenerateExcel}
+          >
+            <img
+              src="/icon-excel.png" // Ruta relativa desde la carpeta public
+              alt="Ícono de Excel"
+              className={styles.excelIcon}
+            />
+          </button>
+
+        </div>
+
+        {/* Campo de búsqueda */}
+        <div className={styles.agregarRecursoFormActions}>
+          <div className={styles.agregarRecursoSearchContainer}>
+            <input
+              type="text"
+              placeholder="Buscar por Descripción de Recurso"
+              className={styles.agregarRecursoSearchInput}
+              value={searchTerm}
+              onChange={handleSearch} // Actualiza los resultados en tiempo real
+            />
+            <button className={styles.agregarRecursoSearchButton} disabled>
+              🔍
+            </button>
+          </div>
         </div>
 
         {/* Spinner o tabla de recursos */}
@@ -250,15 +343,13 @@ function AgregarRecurso() {
             <table className={`${styles.recursoTable} ${styles.fadeIn}`}>
               <thead>
                 <tr>
-                  <th>ID</th>
                   <th>Descripción</th>
                   <th>Opciones</th>
                 </tr>
               </thead>
               <tbody>
-                {recursos.map((recurso) => (
+                {currentData.map((recurso) => (
                   <tr key={recurso.id_recurso_origen}>
-                    <td>{recurso.id_recurso_origen}</td>
                     <td>{recurso.descripcion_recurso}</td>
                     <td>
                       <div className={styles.buttonGroup}>
@@ -280,6 +371,29 @@ function AgregarRecurso() {
                 ))}
               </tbody>
             </table>
+            <div className={styles.pagination}>
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          &laquo;
+        </button>
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          <button
+            key={page}
+            onClick={() => handlePageChange(page)}
+            className={currentPage === page ? styles.active : ""}
+          >
+            {page}
+          </button>
+        ))}
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          &raquo;
+        </button>
+      </div>
           </>
         )}
       </main>

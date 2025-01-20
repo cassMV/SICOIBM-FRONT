@@ -1,31 +1,32 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { TailSpin } from 'react-loader-spinner';
-import axiosInstance from '../../../config/axios.config.js'; // Importa tu instancia configurada
-import Swal from 'sweetalert2'; // Importar SweetAlert
-import styles from './AgregarBien2.module.css';
-import ListaDesplegable from '../../listaDesplegable/listaDesplegable.jsx';
+import { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { TailSpin } from "react-loader-spinner";
+import axiosInstance from "../../../config/axios.config.js"; // Importa tu instancia configurada
+import Swal from "sweetalert2"; // Importar SweetAlert
+import styles from "./AgregarBien2.module.css";
+import ListaDesplegable from "../../listaDesplegable/listaDesplegable.jsx";
 
 function AgregarBien2({ onBack }) {
   const location = useLocation();
   const { selectedProductId, selectedProductName } = location.state || {};
   const navigate = useNavigate();
+  const [filteredBienes, setFilteredBienes] = useState([]);
 
-  const [costo, setCosto] = useState('');
-  const [fechaAdquisicion, setFechaAdquisicion] = useState('');
-  const [serie, setSerie] = useState('');
-  const [estadoBien, setEstadoBien] = useState('');
-  const [noInventario, setNoInventario] = useState('');
-  const [codificacionObjetoGasto, setCodificacionObjetoGasto] = useState('');
-  const [propuestoBaja, setPropuestoBaja] = useState('');
-  const [reparacionBaja, setReparacionBaja] = useState('');
-  const [motivoNoAsignado, setMotivoNoAsignado] = useState('');
-  const [idTipoPosesion, setIdTipoPosesion] = useState('');
-  const [idSubcuenta, setIdSubcuenta] = useState('');
-  const [idPartida, setIdPartida] = useState('');
-  const [idStatusBien, setIdStatusBien] = useState('');
-  const [idTipoAlta, setIdTipoAlta] = useState('');
-  const [idRecursoOrigen, setIdRecursoOrigen] = useState('');
+  const [costo, setCosto] = useState("");
+  const [fechaAdquisicion, setFechaAdquisicion] = useState("");
+  const [serie, setSerie] = useState("");
+  const [estadoBien, setEstadoBien] = useState("");
+  const [noInventario, setNoInventario] = useState("");
+  const [codificacionObjetoGasto, setCodificacionObjetoGasto] = useState("");
+  const [propuestoBaja, setPropuestoBaja] = useState("");
+  const [reparacionBaja, setReparacionBaja] = useState("");
+  const [motivoNoAsignado, setMotivoNoAsignado] = useState("");
+  const [idTipoPosesion, setIdTipoPosesion] = useState("");
+  const [idSubcuenta, setIdSubcuenta] = useState("");
+  const [idPartida, setIdPartida] = useState("");
+  const [idStatusBien, setIdStatusBien] = useState("");
+  const [idTipoAlta, setIdTipoAlta] = useState("");
+  const [idRecursoOrigen, setIdRecursoOrigen] = useState("");
   const [bienes, setBienes] = useState([]);
 
   const [posesiones, setPosesiones] = useState([]);
@@ -36,10 +37,14 @@ function AgregarBien2({ onBack }) {
   const [recursosOrigen, setRecursosOrigen] = useState([]);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [editMode, setEditMode] = useState(false);
   const [selectedBienId, setSelectedBienId] = useState(null);
   const [originalData, setOriginalData] = useState({});
+
+  const [historial, setHistorial] = useState([]);
+  const [showHistorialModal, setShowHistorialModal] = useState(false);
 
   const fetchData = async (url, setter, errorMessage) => {
     try {
@@ -48,47 +53,74 @@ function AgregarBien2({ onBack }) {
         setter(response.data.data);
       } else {
         Swal.fire({
-          icon: 'warning',
-          title: 'Advertencia',
+          icon: "warning",
+          title: "Advertencia",
           text: response.data.message || errorMessage,
         });
       }
     } catch (error) {
       Swal.fire({
-        icon: 'error',
-        title: 'Error en la petición',
+        icon: "error",
+        title: "Error en la petición",
         text: errorMessage,
       });
     }
   };
 
   useEffect(() => {
-    fetchData('/tipo-posesion/get-posesiones', setPosesiones, 'No se pudieron obtener las posesiones.');
-    fetchData('/subcuenta-armonizada/get-subcuentas', setSubcuentas, 'No se pudieron obtener las subcuentas.');
-    fetchData('/codigo-partida-especifica/get-partidas', setPartidas, 'No se pudieron obtener las partidas específicas.');
-    fetchData('/status-bien/get-status-bien', setStatusBienes, 'No se pudieron obtener los estados de bienes.');
-    fetchData('/tipo-alta/get-tipos-alta', setTiposAlta, 'No se pudieron obtener los tipos de alta.');
-    fetchData('/recurso-origen/get-recursos-origen', setRecursosOrigen, 'No se pudieron obtener los recursos de origen.');
+    fetchData(
+      "/tipo-posesion/get-posesiones",
+      setPosesiones,
+      "No se pudieron obtener las posesiones."
+    );
+    fetchData(
+      "/subcuenta-armonizada/get-subcuentas",
+      setSubcuentas,
+      "No se pudieron obtener las subcuentas."
+    );
+    fetchData(
+      "/codigo-partida-especifica/get-partidas",
+      setPartidas,
+      "No se pudieron obtener las partidas específicas."
+    );
+    fetchData(
+      "/status-bien/get-status-bien",
+      setStatusBienes,
+      "No se pudieron obtener los estados de bienes."
+    );
+    fetchData(
+      "/tipo-alta/get-tipos-alta",
+      setTiposAlta,
+      "No se pudieron obtener los tipos de alta."
+    );
+    fetchData(
+      "/recurso-origen/get-recursos-origen",
+      setRecursosOrigen,
+      "No se pudieron obtener los recursos de origen."
+    );
   }, []);
   // Función para obtener los bienes existentes
   useEffect(() => {
     const fetchBienes = async () => {
       try {
-        const response = await axiosInstance.get('/bien/get-bienes');
+        const response = await axiosInstance.get("/bien/get-bienes");
         if (response.data.success) {
           setBienes(response.data.data); // Almacena los bienes obtenidos
+          setFilteredBienes(response.data.data);
         } else {
           Swal.fire({
-            icon: 'warning',
-            title: 'Advertencia',
-            text: response.data.message || 'No se pudieron obtener los bienes existentes.',
+            icon: "warning",
+            title: "Advertencia",
+            text:
+              response.data.message ||
+              "No se pudieron obtener los bienes existentes.",
           });
         }
       } catch (error) {
         Swal.fire({
-          icon: 'error',
-          title: 'Error en la petición',
-          text: 'No se pudieron obtener los bienes existentes.',
+          icon: "error",
+          title: "Error en la petición",
+          text: "No se pudieron obtener los bienes existentes.",
         });
       }
     };
@@ -98,11 +130,16 @@ function AgregarBien2({ onBack }) {
 
   // Función para agregar un nuevo bien
   const handleAddBien = async () => {
-    if (!costo.trim() || !fechaAdquisicion || !serie.trim() || !estadoBien.trim()) {
+    if (
+      !costo.trim() ||
+      !fechaAdquisicion ||
+      !serie.trim() ||
+      !estadoBien.trim()
+    ) {
       Swal.fire({
-        icon: 'warning',
-        title: 'Campos incompletos',
-        text: 'Favor de llenar todos los campos obligatorios.',
+        icon: "warning",
+        title: "Campos incompletos",
+        text: "Favor de llenar todos los campos obligatorios.",
       });
       return;
     }
@@ -129,45 +166,51 @@ function AgregarBien2({ onBack }) {
     try {
       setIsLoading(true);
 
-      const response = await axiosInstance.post('/bien/create-bien', body);
+      const response = await axiosInstance.post("/bien/create-bien", body);
 
       if (response.data.success) {
         Swal.fire({
-          icon: 'success',
-          title: '¡Bien agregado!',
-          text: 'El bien se ha agregado exitosamente.',
+          icon: "success",
+          title: "¡Bien agregado!",
+          text: "El bien se ha agregado exitosamente.",
           timer: 2000,
           showConfirmButton: false,
         });
 
+        // Actualizar lista de bienes automáticamente
+        const updatedResponse = await axiosInstance.get("/bien/get-bienes");
+        if (updatedResponse.data.success) {
+          setBienes(updatedResponse.data.data);
+        }
+
         // Limpiar campos
-        setCosto('');
-        setFechaAdquisicion('');
-        setSerie('');
-        setEstadoBien('');
-        setNoInventario('');
-        setCodificacionObjetoGasto('');
-        setPropuestoBaja('');
-        setReparacionBaja('');
-        setMotivoNoAsignado('');
-        setIdTipoPosesion('');
-        setIdSubcuenta('');
-        setIdPartida('');
-        setIdStatusBien('');
-        setIdTipoAlta('');
-        setIdRecursoOrigen('');
+        setCosto("");
+        setFechaAdquisicion("");
+        setSerie("");
+        setEstadoBien("");
+        setNoInventario("");
+        setCodificacionObjetoGasto("");
+        setPropuestoBaja("");
+        setReparacionBaja("");
+        setMotivoNoAsignado("");
+        setIdTipoPosesion("");
+        setIdSubcuenta("");
+        setIdPartida("");
+        setIdStatusBien("");
+        setIdTipoAlta("");
+        setIdRecursoOrigen("");
       } else {
         Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: response.data.message || 'No se pudo agregar el bien.',
+          icon: "error",
+          title: "Error",
+          text: response.data.message || "No se pudo agregar el bien.",
         });
       }
     } catch (error) {
       Swal.fire({
-        icon: 'error',
-        title: 'Error en el servidor',
-        text: error.message || 'Ocurrió un error al intentar agregar el bien.',
+        icon: "error",
+        title: "Error en el servidor",
+        text: error.message || "Ocurrió un error al intentar agregar el bien.",
       });
     } finally {
       setIsLoading(false);
@@ -183,193 +226,261 @@ function AgregarBien2({ onBack }) {
 
         // Convertir fecha a formato compatible con input type="date"
         const formattedDate = bienData.fecha_adquisicion
-          ? new Date(bienData.fecha_adquisicion).toISOString().split('T')[0]
-          : '';
+          ? new Date(bienData.fecha_adquisicion).toISOString().split("T")[0]
+          : "";
 
         // Rellenar el formulario con los datos obtenidos
-        setCosto(bienData.costo || '');
+        setCosto(bienData.costo || "");
         setFechaAdquisicion(formattedDate);
-        setSerie(bienData.serie || '');
-        setEstadoBien(bienData.estado_bien || '');
-        setNoInventario(bienData.no_inventario || '');
-        setCodificacionObjetoGasto(bienData.codificacion_objeto_gasto || '');
-        setPropuestoBaja(bienData.propuesto_baja || '');
-        setReparacionBaja(bienData.reparacion_baja || '');
-        setMotivoNoAsignado(bienData.motivo_no_asignado || '');
-        setIdTipoPosesion(bienData.id_tipo_posesion || '');
-        setIdSubcuenta(bienData.id_subcuenta || '');
-        setIdPartida(bienData.id_partida || '');
-        setIdStatusBien(bienData.id_status_bien || '');
-        setIdTipoAlta(bienData.id_tipo_alta || '');
-        setIdRecursoOrigen(bienData.id_recurso_origen || '');
+        setSerie(bienData.serie || "");
+        setEstadoBien(bienData.estado_bien || "");
+        setNoInventario(bienData.no_inventario || "");
+        setCodificacionObjetoGasto(bienData.codificacion_objeto_gasto || "");
+        setPropuestoBaja(bienData.propuesto_baja || "");
+        setReparacionBaja(bienData.reparacion_baja || "");
+        setMotivoNoAsignado(bienData.motivo_no_asignado || "");
+        setIdTipoPosesion(bienData.id_tipo_posesion || "");
+        setIdSubcuenta(bienData.id_subcuenta || "");
+        setIdPartida(bienData.id_partida || "");
+        setIdStatusBien(bienData.id_status_bien || "");
+        setIdTipoAlta(bienData.id_tipo_alta || "");
+        setIdRecursoOrigen(bienData.id_recurso_origen || "");
 
         setOriginalData(bienData); // Guardar los datos originales
         setEditMode(true); // Activar el modo edición
         setSelectedBienId(id); // Guardar el ID del bien en edición
       } else {
         Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: response.data.message || 'No se pudieron obtener los datos del bien.',
+          icon: "error",
+          title: "Error",
+          text:
+            response.data.message ||
+            "No se pudieron obtener los datos del bien.",
         });
       }
     } catch (error) {
       Swal.fire({
-        icon: 'error',
-        title: 'Error en el servidor',
-        text: error.message || 'Error desconocido.',
+        icon: "error",
+        title: "Error en el servidor",
+        text: error.message || "Error desconocido.",
+      });
+    }
+  };
+
+  const handleViewHistorial = async (idBien) => {
+    try {
+      const response = await axiosInstance.get(
+        `/bien/historial-bien/${idBien}`
+      );
+
+      if (response.data?.data) {
+        setHistorial(response.data.data); // Guardar el historial en el estado
+        setSelectedBienId(idBien); // Guardar el ID del bien
+        setShowHistorialModal(true); // Mostrar el modal
+      } else {
+        Swal.fire({
+          icon: "warning",
+          title: "Sin historial",
+          text: `No se encontró historial para el bien con ID ${idBien}.`,
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo obtener el historial del bien.",
       });
     }
   };
 
   // Función para guardar cambios al editar un bien
-    // Función para guardar cambios al editar un bien
-    const handleUpdateBien = async () => {
-      const body = {
-        costo,
-        fecha_adquisicion: new Date(fechaAdquisicion).toISOString(),
-        serie,
-        estado_bien: estadoBien,
-        no_inventario: noInventario,
-        codificacion_objeto_gasto: codificacionObjetoGasto,
-        propuesto_baja: propuestoBaja,
-        reparacion_baja: reparacionBaja,
-        motivo_no_asignado: motivoNoAsignado,
-        id_producto: selectedProductId,
-        id_tipo_posesion: Number(idTipoPosesion) || null,
-        id_subcuenta: Number(idSubcuenta) || null,
-        id_partida: Number(idPartida) || null,
-        id_status_bien: Number(idStatusBien) || null,
-        id_tipo_alta: Number(idTipoAlta) || null,
-        id_recurso_origen: Number(idRecursoOrigen) || null,
-      };
-  
-      const changes = Object.entries(body)
-        .filter(([key, value]) => value !== originalData[key])
-        .map(([key, value]) => {
-          const previousValue = originalData[key] || 'Sin valor';
-          return `<p><b>${key}:</b> ${previousValue} → ${value}</p>`;
-        })
-        .join('');
-  
-      // Mostrar un SweetAlert con los cambios
-      Swal.fire({
-        title: 'Cambios detectados',
-        html: changes.length > 0 ? changes : 'No se detectaron cambios.',
-        icon: 'info',
-        showCancelButton: true,
-        confirmButtonText: 'Guardar Cambios',
-        cancelButtonText: 'Cancelar',
-      }).then(async (result) => {
-        if (result.isConfirmed) {
-          // Enviar datos al servidor si se confirma
-          try {
-            const response = await axiosInstance.put(`/bien/update-bien/${selectedBienId}`, body);
-            if (response.data.success) {
-              Swal.fire({
-                icon: 'success',
-                title: 'Cambios guardados',
-                text: 'El bien se ha actualizado exitosamente.',
-                timer: 2000,
-                showConfirmButton: false,
-              });
-  
-              // Actualizar lista de bienes (opcional)
-              const updatedBienes = bienes.map((bien) =>
-                bien.id_bien === selectedBienId ? { ...bien, ...body } : bien
-              );
-              setBienes(updatedBienes);
-  
-              // Limpiar formulario y desactivar modo edición
-              setEditMode(false);
-              setSelectedBienId(null);
-              setCosto('');
-              setFechaAdquisicion('');
-              setSerie('');
-              setEstadoBien('');
-              setNoInventario('');
-              setCodificacionObjetoGasto('');
-              setPropuestoBaja('');
-              setReparacionBaja('');
-              setMotivoNoAsignado('');
-              setIdTipoPosesion('');
-              setIdSubcuenta('');
-              setIdPartida('');
-              setIdStatusBien('');
-              setIdTipoAlta('');
-              setIdRecursoOrigen('');
-            } else {
-              Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: response.data.message || 'No se pudo actualizar el bien.',
-              });
-            }
-          } catch (error) {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error en el servidor',
-              text: error.message || 'Ocurrió un error al intentar actualizar el bien.',
-            });
-          }
-        }
-      });
+  const handleUpdateBien = async () => {
+    const body = {
+      costo,
+      fecha_adquisicion: new Date(fechaAdquisicion).toISOString(),
+      serie,
+      estado_bien: estadoBien,
+      no_inventario: noInventario,
+      codificacion_objeto_gasto: codificacionObjetoGasto,
+      propuesto_baja: propuestoBaja,
+      reparacion_baja: reparacionBaja,
+      motivo_no_asignado: motivoNoAsignado,
+      id_producto: selectedProductId,
+      id_tipo_posesion: Number(idTipoPosesion) || null,
+      id_subcuenta: Number(idSubcuenta) || null,
+      id_partida: Number(idPartida) || null,
+      id_status_bien: Number(idStatusBien) || null,
+      id_tipo_alta: Number(idTipoAlta) || null,
+      id_recurso_origen: Number(idRecursoOrigen) || null,
     };
 
-    // Función para eliminar un bien
-const handleDeleteBien = async (id) => {
-  Swal.fire({
-    title: '¿Está seguro?',
-    text: 'Esta acción eliminará el bien permanentemente.',
-    icon: 'warning',
-    showCancelButton: true,
-    confirmButtonText: 'Sí, eliminar',
-    cancelButtonText: 'Cancelar',
-  }).then(async (result) => {
-    if (result.isConfirmed) {
-      try {
-        const response = await axiosInstance.delete(`/api/bien/delete-bien/${id}`);
+    const changes = Object.entries(body)
+      .filter(([key, value]) => value !== originalData[key])
+      .map(([key, value]) => {
+        const previousValue = originalData[key] || "Sin valor";
+        return `<p><b>${key}:</b> ${previousValue} → ${value}</p>`;
+      })
+      .join("");
 
-        if (response.data.success) {
-          Swal.fire({
-            icon: 'success',
-            title: 'Bien eliminado',
-            text: 'El bien se ha eliminado exitosamente.',
-            timer: 2000,
-            showConfirmButton: false,
-          });
+    // Mostrar un SweetAlert con los cambios
+    Swal.fire({
+      title: "Cambios detectados",
+      html: changes.length > 0 ? changes : "No se detectaron cambios.",
+      icon: "info",
+      showCancelButton: true,
+      confirmButtonText: "Guardar Cambios",
+      cancelButtonText: "Cancelar",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        // Enviar datos al servidor si se confirma
+        try {
+          const response = await axiosInstance.put(
+            `/bien/update-bien/${selectedBienId}`,
+            body
+          );
+          if (response.data.success) {
+            Swal.fire({
+              icon: "success",
+              title: "Cambios guardados",
+              text: "El bien se ha actualizado exitosamente.",
+              timer: 2000,
+              showConfirmButton: false,
+            });
 
-          // Actualizar la lista de bienes
-          setBienes(bienes.filter((bien) => bien.id_bien !== id));
-        } else {
+            // Actualizar lista de bienes automáticamente
+            const updatedResponse = await axiosInstance.get("/bien/get-bienes");
+            if (updatedResponse.data.success) {
+              setBienes(updatedResponse.data.data);
+            }
+
+            // Limpiar formulario y desactivar modo edición
+            setEditMode(false);
+            setSelectedBienId(null);
+            setCosto("");
+            setFechaAdquisicion("");
+            setSerie("");
+            setEstadoBien("");
+            setNoInventario("");
+            setCodificacionObjetoGasto("");
+            setPropuestoBaja("");
+            setReparacionBaja("");
+            setMotivoNoAsignado("");
+            setIdTipoPosesion("");
+            setIdSubcuenta("");
+            setIdPartida("");
+            setIdStatusBien("");
+            setIdTipoAlta("");
+            setIdRecursoOrigen("");
+          } else {
+            Swal.fire({
+              icon: "error",
+              title: "Error",
+              text: response.data.message || "No se pudo actualizar el bien.",
+            });
+          }
+        } catch (error) {
           Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: response.data.message || 'No se pudo eliminar el bien.',
+            icon: "error",
+            title: "Error en el servidor",
+            text:
+              error.message ||
+              "Ocurrió un error al intentar actualizar el bien.",
           });
         }
-      } catch (error) {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error en el servidor',
-          text: error.message || 'Ocurrió un error al intentar eliminar el bien.',
-        });
       }
+    });
+  };
+
+  // Función para eliminar un bien
+  const handleDeleteBien = async (id) => {
+    Swal.fire({
+      title: "¿Está seguro?",
+      text: "Esta acción eliminará el bien permanentemente.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const response = await axiosInstance.delete(
+            `/api/bien/delete-bien/${id}`
+          );
+
+          if (response.data.success) {
+            Swal.fire({
+              icon: "success",
+              title: "Bien eliminado",
+              text: "El bien se ha eliminado exitosamente.",
+              timer: 2000,
+              showConfirmButton: false,
+            });
+
+            // Actualizar lista de bienes automáticamente
+            const updatedResponse = await axiosInstance.get("/bien/get-bienes");
+            if (updatedResponse.data.success) {
+              setBienes(updatedResponse.data.data);
+            }
+          } else {
+            Swal.fire({
+              icon: "error",
+              title: "Error",
+              text: response.data.message || "No se pudo eliminar el bien.",
+            });
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: "error",
+            title: "Error en el servidor",
+            text:
+              error.message || "Ocurrió un error al intentar eliminar el bien.",
+          });
+        }
+      }
+    });
+  };
+
+  // Funcion para paginacion
+  const recordsPerPage = 15;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(filteredBienes.length / recordsPerPage);
+
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
     }
-  });
-};
-  
+  };
+
+  const currentData = filteredBienes.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
+
+  // Función para manejar la búsqueda en tiempo real
+  const handleSearchInput = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+
+    const results = bienes.filter(
+      (bien) =>
+        bien.serie?.toLowerCase().includes(value.toLowerCase()) ||
+        bien.no_inventario?.toLowerCase().includes(value.toLowerCase())
+    );
+    setFilteredBienes(value.trim() === "" ? bienes : results);
+  };
+
   return (
     <div className={styles.agregarBien2Container}>
       <ListaDesplegable />
       <main className={styles.agregarBien2MainContent}>
         <h2 className={styles.agregarBien2Title}>
-          {editMode ? 'Editar Bien' : 'Agregar Bien'}
+          {editMode ? "Editar Bien" : "Agregar Bien"}
         </h2>
 
         {/* Mostrar el nombre del producto seleccionado (opcional) */}
-        <p style={{ fontWeight: 'bold' }}>
-          Producto seleccionado: {selectedProductName || 'N/A'}
+        <p style={{ fontWeight: "bold" }}>
+          Producto seleccionado: {selectedProductName || "N/A"}
         </p>
 
         <div className={styles.agregarBien2FormContainer}>
@@ -377,7 +488,7 @@ const handleDeleteBien = async (id) => {
             type="text"
             placeholder="Producto (ID)"
             className={styles.agregarBien2Input2}
-            value={selectedProductId || ''}
+            value={selectedProductId || ""}
             readOnly
           />
 
@@ -389,6 +500,9 @@ const handleDeleteBien = async (id) => {
               value={costo}
               onChange={(e) => setCosto(e.target.value)}
             />
+            <label htmlFor="fecha_adquisicion" className={styles.inputLabel}>
+              Fecha Adquisición
+            </label>
             <input
               type="date"
               placeholder="Fecha de adquisición"
@@ -494,7 +608,8 @@ const handleDeleteBien = async (id) => {
               <option value="">Código de Partida Específica (ID)</option>
               {partidas.map((partida) => (
                 <option key={partida.id_partida} value={partida.id_partida}>
-                  {partida.id_partida} - {partida.codigo_partida} - {partida.nombre_partida}
+                  {partida.id_partida} - {partida.codigo_partida} -{" "}
+                  {partida.nombre_partida}
                 </option>
               ))}
             </select>
@@ -505,7 +620,10 @@ const handleDeleteBien = async (id) => {
             >
               <option value="">Status del Bien (ID)</option>
               {statusBienes.map((status) => (
-                <option key={status.id_status_bien} value={status.id_status_bien}>
+                <option
+                  key={status.id_status_bien}
+                  value={status.id_status_bien}
+                >
                   {status.id_status_bien} - {status.descripcion_status}
                 </option>
               ))}
@@ -532,34 +650,61 @@ const handleDeleteBien = async (id) => {
             >
               <option value="">Seleccione Recurso de Origen</option>
               {recursosOrigen.map((recurso) => (
-                <option key={recurso.id_recurso_origen} value={recurso.id_recurso_origen}>
+                <option
+                  key={recurso.id_recurso_origen}
+                  value={recurso.id_recurso_origen}
+                >
                   {recurso.id_recurso_origen} - {recurso.descripcion_recurso}
                 </option>
               ))}
             </select>
           </div>
         </div>
-        
+
         {/* Botones de acción */}
         <div className={styles.agregarBien2FormActions}>
           <button
             className={styles.agregarBien2BackButtonAction}
-            onClick={() => navigate('/agregar-bien')}
+            onClick={() => navigate("/agregar-bien")}
           >
             Atrás
           </button>
           {isLoading ? (
             <div className={styles.spinnerContainer}>
-              <TailSpin height="40" width="40" color="red" ariaLabel="loading" />
+              <TailSpin
+                height="40"
+                width="40"
+                color="red"
+                ariaLabel="loading"
+              />
             </div>
           ) : (
             <button
               className={styles.agregarBien2AddButton}
               onClick={editMode ? handleUpdateBien : handleAddBien}
             >
-              {editMode ? 'Guardar Cambios' : 'Agregar'}
+              {editMode ? "Guardar Cambios" : "Agregar"}
             </button>
           )}
+        </div>
+
+        <div className={styles.agregarBien2FormActions}>
+          <div className={styles.agregarBien2SearchContainer}>
+            <input
+              type="text"
+              placeholder="Buscar por número de inventario o serie"
+              className={styles.agregarBien2SearchInput}
+              value={searchTerm}
+              onChange={handleSearchInput} // Actualización en tiempo real
+            />
+            <button
+              className={styles.agregarBien2SearchButton}
+              onClick={(e) => e.preventDefault()}
+              aria-label="Search button (decorative)"
+            >
+              🔍
+            </button>
+          </div>
         </div>
 
         {/* Tabla de bienes */}
@@ -568,7 +713,6 @@ const handleDeleteBien = async (id) => {
           <table className={styles.bienTable}>
             <thead>
               <tr>
-                <th>ID</th>
                 <th>Costo</th>
                 <th>Fecha Adquisición</th>
                 <th>Serie</th>
@@ -589,9 +733,8 @@ const handleDeleteBien = async (id) => {
               </tr>
             </thead>
             <tbody>
-              {bienes.map((bien) => (
+              {currentData.map((bien) => (
                 <tr key={bien.id_bien}>
-                  <td>{bien.id_bien}</td>
                   <td>{bien.costo}</td>
                   <td>{bien.fecha_adquisicion}</td>
                   <td>{bien.serie}</td>
@@ -622,19 +765,91 @@ const handleDeleteBien = async (id) => {
                       >
                         <span className="material-icons">delete</span>
                       </button>
+                      {/* Nuevo botón para el historial */}
+                      <button
+                        className={`${styles.actionButton} ${styles.historyButton}`}
+                        onClick={() => handleViewHistorial(bien.id_bien)}
+                      >
+                        <span className="material-icons">history</span>
+                      </button>
                     </div>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
+
+          <div className={styles.pagination}>
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+            >
+              &laquo;
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => handlePageChange(page)}
+                className={currentPage === page ? styles.active : ""}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+            >
+              &raquo;
+            </button>
+          </div>
         </div>
       </main>
+      {showHistorialModal && (
+        <div className={styles.historialModal}>
+          <div className={styles.historialModalContent}>
+            <h3>Historial del Bien (ID: {selectedBienId})</h3>
+            <table className={styles.historialTable}>
+              <thead>
+                <tr>
+                  <th>Fecha Resguardo</th>
+                  <th>Empleado</th>
+                  <th>Correo</th>
+                  <th>RFC</th>
+                  <th>Contacto</th>
+                  <th>Ubicación</th>
+                  <th>Usuario Asignó</th>
+                </tr>
+              </thead>
+              <tbody>
+                {historial.map((item, index) => (
+                  <tr key={index}>
+                    <td>
+                      {new Date(item.fecha_resguardo).toLocaleDateString()}
+                    </td>
+                    <td>{item.empleado.nombre_empleado}</td>
+                    <td>{item.empleado.correo_electronico}</td>
+                    <td>{item.empleado.rfc}</td>
+                    <td>{item.empleado.numero_contacto}</td>
+                    <td>{item.direccion}</td>
+                    <td>{item.usuario_asigno}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <button
+              className={styles.historialCloseButton}
+              onClick={() => setShowHistorialModal(false)}
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Botón para ir al Home (opcional) */}
       <button
         className={styles.agregarBien2HomeButton}
-        onClick={() => navigate('/')}
+        onClick={() => navigate("/menu")}
       >
         🏠
       </button>

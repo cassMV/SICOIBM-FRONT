@@ -197,3 +197,30 @@
   font-size: 20px;
   vertical-align: middle;
 }
+
+.agregarRolSearchContainer {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.agregarRolSearchInput {
+  padding: 10px;
+  border: 1px solid #a12d2f;
+  border-radius: 5px;
+  margin-right: 10px;
+  width: 300px;
+}
+
+.agregarRolSearchButton {
+  padding: 10px;
+  background-color: #a12d2f;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.agregarBien2SearchButton:hover {
+  background-color: #4a4a4a;
+}

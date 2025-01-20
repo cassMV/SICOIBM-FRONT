@@ -31,7 +31,7 @@ const Navbar = () => {
       icon: 'success',
       confirmButtonText: 'Aceptar'
     }).then(() => {
-      navigate('/login');
+      navigate('/');
     });
   };
 
@@ -56,16 +56,16 @@ const Navbar = () => {
                   <>
                     <button
                       className={styles.popupButton}
-                      onClick={() => handleNavigate('/login')}
+                      onClick={() => handleNavigate('/')}
                     >
                       Iniciar Sesión
                     </button>
-                    <button
+                    {/*<button
                       className={styles.popupButton}
                       onClick={() => handleNavigate('/register')}
                     >
                       Registrarse
-                    </button>
+                    </button>*/}
                   </>
                 )}
               </div>

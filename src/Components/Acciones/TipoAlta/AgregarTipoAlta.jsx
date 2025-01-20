@@ -12,6 +12,8 @@ function AgregarTipoAlta() {
   const [editMode, setEditMode] = useState(false); // Modo edición
   const [selectedTipoAltaId, setSelectedTipoAltaId] = useState(null); // ID del tipo de alta en edición
   const [originalData, setOriginalData] = useState({}); // Datos originales del tipo de alta
+  const [filteredTiposAlta, setFilteredTiposAlta] = useState([]); // Estado para filtrar los resultados
+  const [searchTerm, setSearchTerm] = useState(''); // Estado para el término de búsqueda
 
   // Estado del formulario
   const [formData, setFormData] = useState({
@@ -25,6 +27,7 @@ function AgregarTipoAlta() {
         const response = await axiosInstance.get('/tipo-alta/get-tipos-alta');
         if (response.data.success) {
           setTiposAlta(response.data.data);
+          setFilteredTiposAlta(response.data.data); // Inicializar resultados filtrados
         } else {
           console.error('Error:', response.data.message);
         }
@@ -203,6 +206,35 @@ function AgregarTipoAlta() {
     });
   };
 
+  // Funcion para paginacion
+  const recordsPerPage = 15;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(filteredTiposAlta.length / recordsPerPage);
+
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const currentData = filteredTiposAlta.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
+
+  // Función para manejar la búsqueda en tiempo real
+  const handleSearch = (e) => {
+    const term = e.target.value.toLowerCase();
+    setSearchTerm(term);
+
+    const filtered = tiposAlta.filter((tipoAlta) =>
+      tipoAlta.descripcion_alta.toLowerCase().includes(term)
+    );
+
+    setFilteredTiposAlta(filtered);
+  };
+
   return (
     <div className={styles.agregarTipoAltaContainer}>
       <main className={`${styles.agregarTipoAltaMainContent} ${styles.fadeIn}`}>
@@ -249,6 +281,20 @@ function AgregarTipoAlta() {
           )}
         </div>
 
+        {/* Campo de búsqueda */}
+        <div className={styles.agregarTipoAltaFormActions}>
+          <div className={styles.agregarTipoAltaSearchContainer}>
+            <input
+              type="text"
+              placeholder="Buscar por descripción de alta"
+              className={styles.agregarTipoAltaSearchInput}
+              value={searchTerm}
+              onChange={handleSearch} // Actualiza los resultados en tiempo real
+            />
+            <button className={styles.agregarTipoAltaSearchButton} onClick={handleSearch}>🔍</button>
+          </div>
+        </div>
+
         {/* Spinner o tabla de tipos de alta */}
         {isLoading ? (
           <div className={styles.spinnerContainer}>
@@ -260,15 +306,13 @@ function AgregarTipoAlta() {
             <table className={`${styles.tipoAltaTable} ${styles.fadeIn}`}>
               <thead>
                 <tr>
-                  <th>ID</th>
                   <th>Descripción</th>
                   <th>Opciones</th>
                 </tr>
               </thead>
               <tbody>
-                {tiposAlta.map((tipoAlta) => (
+                {currentData.map((tipoAlta) => (
                   <tr key={tipoAlta.id_tipo_alta}>
-                    <td>{tipoAlta.id_tipo_alta}</td>
                     <td>{tipoAlta.descripcion_alta}</td>
                     <td>
                       <div className={styles.buttonGroup}>
@@ -290,6 +334,29 @@ function AgregarTipoAlta() {
                 ))}
               </tbody>
             </table>
+            <div className={styles.pagination}>
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          &laquo;
+        </button>
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          <button
+            key={page}
+            onClick={() => handlePageChange(page)}
+            className={currentPage === page ? styles.active : ""}
+          >
+            {page}
+          </button>
+        ))}
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          &raquo;
+        </button>
+      </div>
           </>
         )}
       </main>

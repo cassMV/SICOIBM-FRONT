@@ -13,7 +13,7 @@ const Resguardos = () => {
         <Routes>
         <Route path="resguardo" element={<AgregarResguardo />} />
           {/* Ruta por defecto para /acciones */}
-          <Route path="/" element={<h1></h1>} />
+          <Route path="/menu" element={<h1></h1>} />
         </Routes>
       </div>
     </div>

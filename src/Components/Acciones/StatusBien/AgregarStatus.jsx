@@ -11,6 +11,8 @@ const AgregarStatus = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [editingStatus, setEditingStatus] = useState(null); // Estado para modo edición
   const [originalData, setOriginalData] = useState({}); // Almacena los datos originales del status editado
+  const [filteredStatus, setFilteredStatus] = useState([]); // Estado para filtrar los resultados
+  const [searchTerm, setSearchTerm] = useState(''); // Estado para el término de búsqueda
 
   // Estado para los valores del formulario
   const [formData, setFormData] = useState({
@@ -24,6 +26,7 @@ const AgregarStatus = () => {
         const response = await axiosInstance.get('/status-bien/get-status-bien');
         if (response.data.success) {
           setStatusBien(response.data.data);
+          setFilteredStatus(response.data.data); // Inicializa el estado filtrado
         } else {
           console.error('Error:', response.data.message);
         }
@@ -147,6 +150,35 @@ const AgregarStatus = () => {
       });
     }
   };
+  
+  //Funcion para paginacion
+  const recordsPerPage = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(filteredStatus.length / recordsPerPage);
+
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const currentData = filteredStatus.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
+
+  // Función para manejar la búsqueda en tiempo real
+  const handleSearch = (e) => {
+    const term = e.target.value.toLowerCase();
+    setSearchTerm(term);
+
+    const filtered = statusBien.filter((status) =>
+      status.descripcion_status.toLowerCase().includes(term)
+    );
+
+    setFilteredStatus(filtered);
+  };
 
   return (
     <div className={styles.agregarStatusContainer}>
@@ -194,6 +226,20 @@ const AgregarStatus = () => {
           )}
         </div>
 
+        {/* Campo de búsqueda */}
+        <div className={styles.agregarStatusFormActions}>
+          <div className={styles.agregarStatusSearchContainer}>
+            <input
+              type="text"
+              placeholder="Buscar por descripción del status"
+              className={styles.agregarStatusSearchInput}
+              value={searchTerm}
+              onChange={handleSearch} // Actualiza los resultados en tiempo real
+            />
+            <button className={styles.agregarStatusSearchButton} onClick={handleSearch}>🔍</button>
+          </div>
+        </div>
+
         {/* Spinner o tabla de estados */}
         {isLoading ? (
           <div className={styles.spinnerContainer}>
@@ -205,15 +251,13 @@ const AgregarStatus = () => {
             <table className={`${styles.statusTable} ${styles.fadeIn}`}>
               <thead>
                 <tr>
-                  <th>ID</th>
                   <th>Descripción</th>
                   <th>Opciones</th>
                 </tr>
               </thead>
               <tbody>
-                {statusBien.map((status) => (
+                {currentData.map((status) => (
                   <tr key={status.id_status_bien}>
-                    <td>{status.id_status_bien}</td>
                     <td>{status.descripcion_status}</td>
                     <td>
                       <div className={styles.buttonGroup}>
@@ -235,6 +279,29 @@ const AgregarStatus = () => {
                 ))}
               </tbody>
             </table>
+            <div className={styles.pagination}>
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          &laquo;
+        </button>
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          <button
+            key={page}
+            onClick={() => handlePageChange(page)}
+            className={currentPage === page ? styles.active : ""}
+          >
+            {page}
+          </button>
+        ))}
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          &raquo;
+        </button>
+      </div>
           </>
         )}
       </main>

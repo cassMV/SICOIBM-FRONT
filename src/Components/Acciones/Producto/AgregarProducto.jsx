@@ -14,6 +14,10 @@ const AgregarProducto = () => {
   const [originalData, setOriginalData] = useState({}); // Almacena los datos originales del producto editado
   const [selectedFile, setSelectedFile] = useState(null); // Archivo seleccionado
 
+  // Lista de productos que se mostrarán (puede estar filtrada)
+  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+
   // Estado del formulario
   const [formData, setFormData] = useState({
     nombre_producto: "",
@@ -30,6 +34,7 @@ const AgregarProducto = () => {
         const response = await axiosInstance.get("/producto/get-productos");
         if (response.data.success) {
           setProductos(response.data.data);
+          setFilteredProducts(response.data.data); // Inicialmente mostramos todos
         } else {
           console.error("Error:", response.data.message);
         }
@@ -277,9 +282,6 @@ const AgregarProducto = () => {
       });
     }
   };
-  
-  
-  
 
   // Función para eliminar un producto con confirmación
   const handleDeleteProducto = async (id) => {
@@ -330,6 +332,71 @@ const AgregarProducto = () => {
       }
     });
   };
+
+  // Funcion de paginacion
+  const recordsPerPage = 10;
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const totalPages = Math.ceil(filteredProducts.length / recordsPerPage);
+
+  const handlePageChange = (page) => {
+    if (page > 0 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const currentData = filteredProducts.slice(
+    (currentPage - 1) * recordsPerPage,
+    currentPage * recordsPerPage
+  );
+
+  // Función para manejar la búsqueda en tiempo real
+  const handleSearchInput = (e) => {
+    const term = e.target.value.toLowerCase();
+      setSearchTerm(term);
+      const filtered = productos.filter((prod) => {
+      const brand = prod.marca?.nombre_marca?.toLowerCase() || '';
+      const model = prod.modelo?.toLowerCase() || '';
+      const name = prod.nombre_producto?.toLowerCase() || '';
+      return brand.includes(term) || model.includes(term) || name.includes(term);
+    });
+    setFilteredProducts(filtered);
+  };
+
+  const handleGenerateExcel = async () => {
+    try {
+      const response = await axiosInstance.get(
+        "/excel/generar-excel?tabla=producto",
+        {
+          responseType: "blob", // Para manejar archivos binarios
+        }
+      );
+
+      // Crear un enlace para descargar el archivo
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "reporte_bien.xlsx");
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+
+      Swal.fire({
+        icon: "success",
+        title: "¡Éxito!",
+        text: "El archivo Excel ha sido generado y descargado.",
+      });
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo generar el archivo Excel.",
+      });
+      console.error("Error al generar el Excel:", error);
+    }
+  };
+
+
 
   return (
     <div className={styles.agregarProductoContainer}>
@@ -435,7 +502,38 @@ const AgregarProducto = () => {
               Agregar
             </button>
           )}
+          <button
+            className={styles.agregarAreaExcelButton}
+            onClick={handleGenerateExcel}
+          >
+            <img
+              src="/icon-excel.png" // Ruta relativa desde la carpeta public
+              alt="Ícono de Excel"
+              className={styles.excelIcon}
+            />
+          </button>
+
         </div>
+
+        {/* Barra de búsqueda por marca o modelo */}
+        <div className={styles.agregarProductoFormActions}>
+          <div className={styles.agregarProductoSearchContainer}>
+            <input
+              type="text"
+              placeholder="Buscar por nombre, marca o modelo"
+              className={styles.agregarProductoSearchInput}
+              value={searchTerm}
+              onChange={handleSearchInput} 
+            />
+            <button
+              className={styles.agregarProductoSearchButton}
+              onClick={(e) => e.preventDefault()}
+              aria-label="Search button (decorative)"
+            >
+              🔍
+            </button>
+          </div> 
+        </div>              
   
         {/* Spinner o Tabla */}
         {isLoading ? (
@@ -448,7 +546,6 @@ const AgregarProducto = () => {
             <table className={`${styles.productoTable} ${styles.fadeIn}`}>
               <thead>
                 <tr>
-                  <th>ID</th>
                   <th>Nombre</th>
                   <th>Modelo</th>
                   <th>Imagen</th>
@@ -458,9 +555,8 @@ const AgregarProducto = () => {
                 </tr>
               </thead>
               <tbody>
-                {productos.map((producto) => (
+                {currentData.map((producto) => (
                   <tr key={producto.id_producto}>
-                    <td>{producto.id_producto}</td>
                     <td>{producto.nombre_producto}</td>
                     <td>{producto.modelo}</td>
                     <td>
@@ -508,23 +604,40 @@ const AgregarProducto = () => {
                 ))}
               </tbody>
             </table>
+            <div className={styles.pagination}>
+        <button
+          onClick={() => handlePageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+        >
+          &laquo;
+        </button>
+        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          <button
+            key={page}
+            onClick={() => handlePageChange(page)}
+            className={currentPage === page ? styles.active : ""}
+          >
+            {page}
+          </button>
+        ))}
+        <button
+          onClick={() => handlePageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+        >
+          &raquo;
+        </button>
+      </div>
           </>
         )}
       </main>
       <button
         className={styles.agregarProductoHomeButton}
-        onClick={() => navigate("/")}
+        onClick={() => navigate("/menu")}
       >
         🏠
       </button>
     </div>
   );
-  
-  
-  
-  
-  
-  
 };
 
 export default AgregarProducto;

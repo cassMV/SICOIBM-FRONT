@@ -21,14 +21,14 @@ function App() {
         <Routes>
           {/* Ruta principal de acciones con rutas anidadas */}
           <Route path="/acciones/*" element={<Acciones />} />
-          <Route path="/" element={<Menu/>} />
+          <Route path="/menu" element={<Menu/>} />
           <Route path="/usuarios/*" element={<Usuarios/>}/>
           <Route path="/resguardos/*" element={<Resguardos/>}/>
           <Route path="/bienes/*" element={<Bienes/>}></Route>
           <Route path="/bajas/*" element={<Bajas/>}></Route>
           <Route path="/agregar-bien/*" element={<AgregarBien />} />
           <Route path="/agregar-bien-2/*" element={<AgregarBien2 />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Login />} />
           <Route path="/register" element={<Register />} />
           
           {/* Agrega otras rutas principales si es necesario */}

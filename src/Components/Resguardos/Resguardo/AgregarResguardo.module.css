@@ -205,3 +205,151 @@
     font-size: 20px;
     vertical-align: middle;
   }
+
+  /* Botón de generación de PDF */
+.generatePdfButton {
+  padding: 10px 15px; /* Tamaño del botón */
+  background-color: #dc3545; /* Rojo Bootstrap */
+  color: white; /* Texto blanco */
+  border: none; /* Sin bordes */
+  border-radius: 5px; /* Bordes redondeados */
+  cursor: pointer; /* Cambia el cursor al pasar */
+  font-size: 14px; /* Tamaño de fuente */
+  font-weight: bold; /* Negrita */
+  display: flex; /* Para alinear icono y texto */
+  align-items: center; /* Centrar verticalmente */
+  gap: 8px; /* Espaciado entre icono y texto */
+  transition: background-color 0.3s ease; /* Animación al pasar el cursor */
+  margin: auto;
+}
+
+.generatePdfButton:hover {
+  background-color: #c82333; /* Rojo más oscuro al pasar */
+}
+
+.generatePdfButton:active {
+  background-color: #a71d2a; /* Rojo oscuro al presionar */
+}
+
+/* Icono del botón */
+.pdfIcon {
+  font-size: 16px; /* Tamaño del icono */
+}
+
+.qrButton {
+  background-color: #007bff; /* Azul Bootstrap */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+}
+
+.qrButton:hover {
+  background-color: #0056b3; /* Azul oscuro */
+}
+
+.qrIcon {
+  font-size: 20px;
+}
+.qrModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.qrModalContent {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.qrImage {
+  width: 200px;
+  height: 200px;
+  margin: 20px 0;
+}
+
+.qrModalActions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.qrPrintButton,
+.qrCloseButton {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.qrPrintButton {
+  background-color: #28a745; /* Verde */
+  color: white;
+}
+
+.qrCloseButton {
+  background-color: #dc3545; /* Rojo */
+  color: white;
+}
+
+.qrPrintButton:hover {
+  background-color: #218838;
+}
+
+.qrCloseButton:hover {
+  background-color: #c82333;
+}
+.qrDownloadButton {
+  padding: 10px 20px;
+  background-color: #007bff; /* Azul */
+  color: white;
+  border: none;
+  border-radius: 5px;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.qrDownloadButton:hover {
+  background-color: #0056b3;
+}
+.qrFilenameInput {
+  padding: 10px;
+  font-size: 14px;
+  width: calc(100% - 20px);
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.agregarResguardoHomeButton {
+  position: fixed; /* Fija el botón a la ventana del navegador */
+  bottom: 20px; /* Alinea a 20px desde la parte inferior */
+  right: 20px; /* Alinea a 20px desde la parte derecha */
+  background-color: #333; /* Fondo gris oscuro */
+  color: white; /* Texto blanco */
+  font-size: 24px; /* Tamaño del texto */
+  border: none; /* Sin borde */
+  border-radius: 50%; /* Botón circular */
+  width: 50px; /* Ancho del botón */
+  height: 50px; /* Alto del botón */
+  cursor: pointer; /* Cambia el cursor a puntero al pasar el mouse */
+  z-index: 1000; /* Asegura que esté por encima de otros elementos */
+}
+

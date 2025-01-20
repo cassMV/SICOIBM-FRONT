@@ -244,5 +244,50 @@
   height: 35px;
 }
 
-/* Mantén el resto de los estilos que ya tenías */
+.agregarEmpleadoSearchContainer {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
 
+.agregarEmpleadoSearchInput {
+  padding: 10px;
+  border: 1px solid #a12d2f;
+  border-radius: 5px;
+  margin-right: 10px;
+  width: 300px;
+}
+
+.agregarEmpleadoSearchButton {
+  padding: 10px;
+  background-color: #a12d2f;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.agregarEmpleadoSearchButton:hover {
+  background-color: #4a4a4a;
+}
+
+.excelIcon {
+  height: 30px; /* Cambia este valor a la altura deseada */
+  width: auto; /* Asegura que mantenga la proporción */
+}
+
+.agregarAreaExcelButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  background-color: #28a745; /* Verde similar a Excel */
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.agregarAreaExcelButton:hover {
+  background-color: #218838;
+}
